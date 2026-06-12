@@ -1,0 +1,443 @@
+/* ── HERO ─────────────────────────────────────────────────────── */
+.about-page { background: var(--color-bg); }
+
+.about-hero {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  min-height: 380px;
+  max-height: 580px;
+  background: url('https://images.unsplash.com/photo-1501004318641-b39e6451bec6?w=1920&h=1080&fit=crop&q=90') center/cover no-repeat;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.about-hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(160deg, rgba(46,74,46,0.88) 0%, rgba(46,74,46,0.55) 100%);
+}
+
+.about-hero-content {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.about-badge {
+  margin-bottom: 1.25rem;
+  filter: drop-shadow(0 4px 16px rgba(201,168,106,0.4));
+  animation: floatBadge 4s ease-in-out infinite;
+}
+
+@keyframes floatBadge {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-7px); }
+}
+
+.about-hero-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(2.5rem, 6vw, 4.5rem);
+  color: #FAF7F2;
+  margin: 0 0 1.25rem;
+  text-shadow: 0 2px 20px rgba(0,0,0,0.4);
+}
+
+.about-hero-sub {
+  font-family: 'Playfair Display', serif;
+  font-style: italic;
+  color: #C9A86A;
+  font-size: clamp(1rem, 2vw, 1.3rem);
+  margin: 0;
+  line-height: 1.6;
+}
+
+/* ── SHARED ───────────────────────────────────────────────────── */
+.section-tag-a {
+  display: inline-block;
+  border: 1px dashed var(--color-accent);
+  color: var(--color-accent);
+  padding: 0.2rem 0.9rem;
+  border-radius: 100px;
+  font-size: 0.75rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  font-family: 'Lato', sans-serif;
+  margin-bottom: 0.75rem;
+}
+
+.about-section-title {
+  font-family: 'Playfair Display', serif;
+  color: var(--color-primary);
+  font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+  margin: 0.25rem 0 0;
+}
+
+.about-section-sub {
+  color: var(--color-text-muted);
+  font-size: 1.05rem;
+  margin: 0.5rem 0 0;
+}
+
+.about-divider {
+  width: 60px;
+  height: 3px;
+  background: var(--color-accent);
+  border-radius: 2px;
+  margin: 1rem 0;
+}
+
+.about-body {
+  color: var(--color-text-muted);
+  line-height: 1.85;
+  font-size: 1.05rem;
+  margin: 0 0 1rem;
+}
+
+/* ── STORY ────────────────────────────────────────────────────── */
+.about-story {
+  padding: 6rem 2rem;
+  background: #fff;
+}
+
+.about-story-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5rem;
+  align-items: center;
+}
+
+.about-story-img-col { position: relative; }
+
+.about-story-img-frame {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(46,74,46,0.18);
+}
+
+.about-story-img-frame::before {
+  content: '';
+  position: absolute;
+  inset: -8px;
+  border: 2px dashed var(--color-accent);
+  border-radius: 18px;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.about-story-img {
+  width: 100%;
+  display: block;
+  border-radius: 12px;
+  position: relative;
+  z-index: 1;
+}
+
+.about-story-img-badge {
+  position: absolute;
+  bottom: -1.0rem;
+  right: -0.3rem;
+  z-index: 2;
+  width: 90px;
+  height: 90px;
+  background: var(--color-bg);
+  border: 2px dashed var(--color-accent);
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
+  box-shadow: 0 4px 16px rgba(46,74,46,0.15);
+}
+
+.about-story-text-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.about-cta {
+  padding: 0.85rem 2rem;
+  font-size: 0.95rem;
+}
+
+/* ── MILESTONES ───────────────────────────────────────────────── */
+.about-milestones {
+  background: var(--color-primary);
+  padding: 4rem 2rem;
+}
+
+.about-milestones-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 2rem;
+  text-align: center;
+}
+
+.milestone-card {
+  padding: 2rem 1.5rem;
+  border: 1px solid rgba(201,168,106,0.25);
+  border-radius: 10px;
+  background: rgba(250,247,242,0.06);
+  transition: transform 0.25s;
+}
+
+.milestone-card:hover { transform: translateY(-4px); }
+
+.milestone-year {
+  display: block;
+  font-family: 'Playfair Display', serif;
+  font-size: 2.8rem;
+  font-weight: 700;
+  color: var(--color-accent);
+  line-height: 1;
+  margin-bottom: 0.3rem;
+}
+
+.milestone-label {
+  display: block;
+  font-family: 'Playfair Display', serif;
+  font-size: 1rem;
+  color: #FAF7F2;
+  margin-bottom: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.milestone-desc {
+  font-size: 0.88rem;
+  color: rgba(250,247,242,0.65);
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* ── VALUES ───────────────────────────────────────────────────── */
+.about-values {
+  padding: 6rem 2rem;
+  background: var(--color-bg);
+}
+
+.about-values-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.about-values-header {
+  text-align: center;
+  margin-bottom: 3.5rem;
+}
+
+.values-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 2rem;
+}
+
+.value-card {
+  background: #fff;
+  border: 1px solid rgba(201,168,106,0.2);
+  border-top: 4px solid var(--color-accent);
+  border-radius: 10px;
+  padding: 2rem 1.75rem;
+  transition: transform 0.25s, box-shadow 0.25s;
+}
+
+.value-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 16px 40px rgba(46,74,46,0.1);
+}
+
+.value-icon {
+  font-size: 2.2rem;
+  margin-bottom: 1rem;
+}
+
+.value-title {
+  font-family: 'Playfair Display', serif;
+  color: var(--color-primary);
+  font-size: 1.15rem;
+  margin: 0 0 0.6rem;
+}
+
+.value-desc {
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+  line-height: 1.75;
+  margin: 0;
+}
+
+/* ── TEAM ─────────────────────────────────────────────────────── */
+.about-team {
+  background: #fff;
+  padding: 6rem 2rem;
+}
+
+.about-team-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.team-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 2.5rem;
+}
+
+.team-card {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(201,168,106,0.18);
+  background: var(--color-bg);
+  transition: transform 0.25s, box-shadow 0.25s;
+}
+
+.team-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 18px 44px rgba(46,74,46,0.12);
+}
+
+.team-img-wrap {
+  position: relative;
+  padding-top: 72%;
+  overflow: hidden;
+}
+
+.team-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  transition: transform 0.4s;
+}
+
+.team-card:hover .team-img { transform: scale(1.05); }
+
+.team-img-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(46,74,46,0.5) 0%, transparent 50%);
+}
+
+.team-info {
+  padding: 1.5rem;
+  border-top: 1px dashed rgba(201,168,106,0.35);
+}
+
+.team-name {
+  font-family: 'Playfair Display', serif;
+  color: var(--color-primary);
+  font-size: 1.15rem;
+  margin: 0 0 0.2rem;
+}
+
+.team-role {
+  font-size: 0.8rem;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--color-accent);
+  font-family: 'Lato', sans-serif;
+  margin: 0 0 0.75rem;
+}
+
+.team-quote {
+  font-family: 'Playfair Display', serif;
+  font-style: italic;
+  color: var(--color-text-muted);
+  font-size: 0.92rem;
+  line-height: 1.65;
+  margin: 0;
+  border-left: 3px solid var(--color-accent);
+  padding-left: 0.75rem;
+}
+
+/* ── CTA BANNER ───────────────────────────────────────────────── */
+.about-cta-banner {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  min-height: 340px;
+  max-height: 560px;
+  background: url('https://images.unsplash.com/photo-1508610048659-a06b669e3321?w=1920&h=1080&fit=crop&q=90') center/cover no-repeat;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.about-cta-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(46,74,46,0.82);
+}
+
+.about-cta-content {
+  position: relative;
+  z-index: 2;
+  padding: 3rem 2rem;
+  max-width: 720px;
+}
+
+/* ── RESPONSIVE ───────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .about-story-inner { grid-template-columns: 1fr; gap: 3rem; }
+  .about-story-img-badge { bottom: 0.75rem; right: 0.75rem; }
+  .about-hero { aspect-ratio: unset; min-height: 320px; max-height: unset; }
+  .about-cta-banner { aspect-ratio: unset; min-height: 300px; max-height: unset; }
+  .about-story { padding: 3.5rem 1.25rem; }
+  .about-values, .about-team { padding: 3.5rem 1.25rem; }
+  .about-milestones { padding: 3rem 1.25rem; }
+}
+
+@media (max-width: 768px) {
+  .about-hero { min-height: 260px; }
+  .about-hero-content { padding: 1.5rem 1rem; }
+  .about-badge img { width: 80px !important; height: 80px !important; }
+  .about-hero-title { font-size: 2.2rem; }
+  .about-hero-sub { font-size: 0.95rem; }
+  .values-grid { grid-template-columns: 1fr 1fr; }
+  .team-grid { grid-template-columns: 1fr; }
+  .about-milestones-inner { grid-template-columns: 1fr 1fr; }
+  .milestone-year { font-size: 2.2rem; }
+  .about-story { padding: 2.5rem 1rem; }
+  .about-values, .about-team { padding: 2.5rem 1rem; }
+  .about-milestones { padding: 2.5rem 1rem; }
+  .about-body { font-size: 0.95rem; line-height: 1.75; }
+  .about-section-title { font-size: 1.6rem; }
+  .value-card { padding: 1.5rem 1.25rem; }
+}
+
+@media (max-width: 480px) {
+  .about-hero { min-height: 220px; }
+  .about-hero-title { font-size: 1.8rem; }
+  .about-hero-sub { font-size: 0.88rem; }
+  .about-badge img { width: 65px !important; height: 65px !important; }
+  .values-grid { grid-template-columns: 1fr; }
+  .about-milestones-inner { grid-template-columns: 1fr 1fr; }
+  .milestone-year { font-size: 1.8rem; }
+  .milestone-card { padding: 1.25rem 1rem; }
+  .milestone-desc { font-size: 0.8rem; }
+  .about-story { padding: 2rem 0.75rem; }
+  .about-values, .about-team { padding: 2rem 0.75rem; }
+  .about-cta-banner { min-height: 250px; }
+  .about-cta-content { padding: 2rem 1rem; }
+  .about-section-title { font-size: 1.4rem; }
+  .about-body { font-size: 0.9rem; }
+  .value-card { padding: 1.25rem 1rem; }
+  .value-title { font-size: 1rem; }
+  .value-desc { font-size: 0.82rem; }
+  .team-info { padding: 1.1rem; }
+  .team-name { font-size: 1rem; }
+  .team-quote { font-size: 0.85rem; }
+}
