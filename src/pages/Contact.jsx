@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Helmet } from "react-helmet-async";
 import "./Contact.css";
 
 const CONTACT_INFO = [
@@ -34,6 +35,11 @@ export default function Contact() {
 
   return (
     <div className="contact-page">
+      <Helmet>
+        <title>Contact Us | Sowgandhika Flowers</title>
+        <meta name="description" content="Get in touch with Sowgandhika Flowers in Hyderabad. Contact us for bulk orders, wedding bookings, garlands, Pooja flower deliveries, or custom flower subscriptions." />
+        <link rel="canonical" href="https://sowgandhikaflowers.com/contact" />
+      </Helmet>
 
       {/* ── HERO ── */}
       <section className="contact-hero">

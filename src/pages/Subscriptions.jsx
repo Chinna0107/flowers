@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import { motion } from "framer-motion";
 import { useAuth } from "../store/authStore";
 import { API } from "../config/api";
@@ -170,6 +171,11 @@ export default function Subscriptions() {
 
   return (
     <div style={{ maxWidth: 860, margin: '0 auto', padding: '4rem 1.5rem', minHeight: '80vh' }}>
+      <Helmet>
+        <title>Flower Subscriptions | Sowgandhika Flowers</title>
+        <meta name="description" content="Subscribe to daily, weekly or alternate-day fresh flower deliveries in Hyderabad. Perfect for morning Pooja rituals or bringing fresh blooms into your home." />
+        <link rel="canonical" href="https://sowgandhikaflowers.com/subscriptions" />
+      </Helmet>
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} style={{ textAlign: 'center', marginBottom: '3.5rem' }}>
         <div style={{ width: 80, height: 80, borderRadius: '50%', border: '2px dashed var(--color-accent)', margin: '0 auto 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--color-bg)' }}>
           <Flower2 size={32} color="var(--color-accent)" />

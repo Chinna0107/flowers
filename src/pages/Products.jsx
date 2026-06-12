@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import { useCart } from "../store/cartStore.jsx";
 import { useAuth } from "../store/authStore";
 import { CATEGORIES } from "../data/products.js";
@@ -96,6 +97,11 @@ export default function Products() {
 
   return (
     <div className="products-page">
+      <Helmet>
+        <title>Our Flower Collection | Sowgandhika Flowers</title>
+        <meta name="description" content="Browse our collection of fresh flowers online in Hyderabad. Sells premium garlands, Pooja basic/premium items, bridal Poola Jada, and flower jewellery." />
+        <link rel="canonical" href="https://sowgandhikaflowers.com/products" />
+      </Helmet>
 
       {/* ── PAGE HERO ── */}
       <div className="products-hero">

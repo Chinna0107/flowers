@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
+import { Helmet } from "react-helmet-async";
 import { useCart } from "../store/cartStore.jsx";
 import { useAuth } from "../store/authStore";
 import { CATEGORIES } from "../data/products.js";
@@ -85,6 +86,11 @@ export default function Home() {
 
   return (
     <div>
+      <Helmet>
+        <title>Sowgandhika Flowers | Fresh Flower Delivery & Subscriptions in Hyderabad</title>
+        <meta name="description" content="Order fresh flowers online in Hyderabad. Sowgandhika Flowers offers daily Pooja flowers, traditional garlands, bridal hair flowers, and customized subscriptions." />
+        <link rel="canonical" href="https://sowgandhikaflowers.com/" />
+      </Helmet>
 
       {/* ── HERO BANNER ── */}
       <div className="hero-banner">

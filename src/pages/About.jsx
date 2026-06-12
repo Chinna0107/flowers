@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import "./About.css";
 import logo from "../assets/logo.jpeg";
 
@@ -27,6 +28,11 @@ const MILESTONES = [
 export default function About() {
   return (
     <div className="about-page">
+      <Helmet>
+        <title>About Us | Sowgandhika Flowers</title>
+        <meta name="description" content="Learn the story of Sowgandhika Flowers. We are an artisanal flower studio in Hyderabad delivering farm-fresh, custom-wrapped flower arrangements, Pooja flowers, and traditional garlands." />
+        <link rel="canonical" href="https://sowgandhikaflowers.com/about" />
+      </Helmet>
 
       {/* ── HERO ── */}
       <section className="about-hero">

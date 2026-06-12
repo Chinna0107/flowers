@@ -1,0 +1,15 @@
+User-agent: *
+Allow: /
+
+# Disallow admin panel and checkout/account pages to prevent indexing sensitive/private areas
+Disallow: /admin/
+Disallow: /checkout/
+Disallow: /confirmation/
+Disallow: /my-orders/
+Disallow: /my-subscriptions/
+Disallow: /support/
+Disallow: /forgot-password
+Disallow: /reset-password
+Disallow: /verify-email
+
+Sitemap: https://sowgandhikaflowers.com/sitemap.xml
