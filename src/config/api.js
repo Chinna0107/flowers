@@ -4,7 +4,7 @@ const isDevelopment = import.meta.env.DEV || window.location.hostname === 'local
 
 export const API_BASE_URL = import.meta.env.VITE_API_URL || (isDevelopment 
   ? 'http://localhost:5000/api'
-  : 'https://your-backend-domain.com/api'); // Update with your backend production URL
+  : 'https://flowerbe.vercel.app/api'); // Update with your backend production URL
 
 export const API = API_BASE_URL;
 
