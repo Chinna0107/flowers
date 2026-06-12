@@ -3,9 +3,8 @@ import { useNavigate, useLocation, Link } from "react-router-dom";
 import { useCart } from "../store/cartStore.jsx";
 import { useAuth } from "../store/authStore";
 import { CATEGORIES } from "../data/products.js";
+import { API } from "../config/api";
 import "./Products.css";
-
-const API = 'http://localhost:5000/api';
 
 function ProductCard({ p }) {
   const [added, setAdded] = useState(false);

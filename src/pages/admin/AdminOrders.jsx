@@ -2,9 +2,9 @@ import { useState, useEffect } from "react";
 import { useAuth } from "../../store/authStore";
 
 const STATUSES = ['All', 'Processing', 'In Transit', 'Delivered', 'Cancelled'];
-const STATUS_C = { Delivered: '#2E4A2E', 'In Transit': '#C9A86A', Processing: '#888', Cancelled: '#dc2626', Confirmed: '#2563eb' };
-const API = 'http://localhost:5000/api';
+import { API } from "../../config/api";
 
+const STATUS_C = { Delivered: '#2E4A2E', 'In Transit': '#C9A86A', Processing: '#888', Cancelled: '#dc2626', Confirmed: '#2563eb' };
 export default function AdminOrders() {
   const { token } = useAuth();
   const [orders, setOrders] = useState([]);

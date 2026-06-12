@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../../store/authStore";
+import { API } from "../../config/api";
 
-const API = 'http://localhost:5000/api';
 
 export default function AdminReports() {
   const { token } = useAuth();

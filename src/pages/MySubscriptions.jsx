@@ -3,8 +3,8 @@ import { motion } from "framer-motion";
 import { Repeat, Flower2 } from "lucide-react";
 import { useAuth } from "../store/authStore";
 import { useNavigate } from "react-router-dom";
+import { API } from "../config/api";
 
-const API = 'http://localhost:5000/api';
 const STATUS_C = { Active: { bg: 'rgba(46,74,46,0.1)', color: '#2E4A2E', border: 'rgba(46,74,46,0.3)' }, Paused: { bg: 'rgba(201,168,106,0.15)', color: '#b58b3c', border: 'rgba(201,168,106,0.5)' }, Cancelled: { bg: 'rgba(0,0,0,0.05)', color: '#666', border: 'rgba(0,0,0,0.1)' } };
 
 export default function MySubscriptions() {

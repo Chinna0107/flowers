@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import FadeIn from "../components/FadeIn";
+import { API } from "../config/api";
 
-const API = 'http://localhost:5000/api';
 
 export default function ResetPassword() {
   const [searchParams] = useSearchParams();

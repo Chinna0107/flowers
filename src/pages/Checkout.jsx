@@ -5,8 +5,8 @@ import { useCart } from "../store/cartStore.jsx";
 import { useAuth } from "../store/authStore";
 import { CheckCircle2, MapPin, CreditCard, ChevronRight, ChevronLeft, ShieldCheck } from "lucide-react";
 import "./Checkout.css";
+import { API } from "../config/api";
 
-const API = 'http://localhost:5000/api';
 
 const loadRazorpay = () => new Promise((resolve) => {
   if (window.Razorpay) return resolve(true);

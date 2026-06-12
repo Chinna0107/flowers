@@ -4,9 +4,8 @@ import { useState, useEffect } from "react";
 import { useCart } from "../store/cartStore.jsx";
 import { useAuth } from "../store/authStore";
 import { CATEGORIES } from "../data/products.js";
+import { API } from "../config/api";
 import "./Home.css";
-
-const API = 'http://localhost:5000/api';
 
 function PopularCard({ p }) {
   const [added, setAdded] = useState(false);

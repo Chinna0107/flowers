@@ -2,9 +2,8 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useAuth } from "../store/authStore";
+import { API } from "../config/api";
 import { Calendar, Repeat, Flower2, Zap } from "lucide-react";
-
-const API = 'http://localhost:5000/api';
 
 const PLANS = [
   { id: 'monthly', label: 'Monthly', icon: <Calendar size={24} />, desc: 'Delivery every 30 days', days: 30 },

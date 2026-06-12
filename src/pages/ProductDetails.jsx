@@ -4,9 +4,8 @@ import { motion } from "framer-motion";
 import { useCart } from "../store/cartStore.jsx";
 import { useAuth } from "../store/authStore";
 import { CATEGORIES } from "../data/products.js";
+import { API } from "../config/api";
 import { ChevronLeft, CheckCircle2, ShieldCheck, Clock, Truck } from "lucide-react";
-
-const API = 'http://localhost:5000/api';
 
 export default function ProductDetails() {
   const { id } = useParams();

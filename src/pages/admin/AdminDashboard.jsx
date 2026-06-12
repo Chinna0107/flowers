@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../../store/authStore";
 
-const STATUS_C = { Delivered: '#2E4A2E', 'In Transit': '#C9A86A', Processing: '#888', Confirmed: '#2563eb', Cancelled: '#dc2626' };
-const API = 'http://localhost:5000/api';
+import { API } from "../../config/api";
 
+const STATUS_C = { Delivered: '#2E4A2E', 'In Transit': '#C9A86A', Processing: '#888', Confirmed: '#2563eb', Cancelled: '#dc2626' };
 export default function AdminDashboard() {
   const { token } = useAuth();
   const [stats, setStats] = useState(null);

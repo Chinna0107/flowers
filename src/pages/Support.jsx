@@ -3,8 +3,8 @@ import { motion } from "framer-motion";
 import { HeadphonesIcon } from "lucide-react";
 import { useAuth } from "../store/authStore";
 import { useNavigate } from "react-router-dom";
+import { API } from "../config/api";
 
-const API = 'http://localhost:5000/api';
 const SUBJECTS = ['Daily flower delivery issue', 'Wrong / damaged order', 'Subscription management', 'Payment & billing', 'General query'];
 
 export default function Support() {

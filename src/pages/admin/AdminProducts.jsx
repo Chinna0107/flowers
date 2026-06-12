@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../../store/authStore";
+import { API } from "../../config/api";
 
-const API = 'http://localhost:5000/api';
 const BLANK = { name: '', category: 'fresh', price_per_unit: '', our_price: '', mrp: '', tag: '', img: '', description: '' };
 
 export default function AdminProducts() {

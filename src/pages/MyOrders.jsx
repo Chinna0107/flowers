@@ -3,8 +3,8 @@ import { motion } from "framer-motion";
 import { Package, Truck, CheckCircle, Clock } from "lucide-react";
 import { useAuth } from "../store/authStore";
 import { useNavigate } from "react-router-dom";
+import { API } from "../config/api";
 
-const API = 'http://localhost:5000/api';
 const STATUS_ICONS = { Delivered: <CheckCircle size={16} />, 'In Transit': <Truck size={16} />, Processing: <Clock size={16} />, Confirmed: <CheckCircle size={16} /> };
 const STATUS_COLORS = {
   Delivered: { bg: 'rgba(46,74,46,0.1)', color: '#2E4A2E', border: 'rgba(46,74,46,0.3)' },
