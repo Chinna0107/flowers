@@ -89,7 +89,7 @@ export default function Home() {
       <Helmet>
         <title>Sowgandhika Flowers | Fresh Flower Delivery & Subscriptions in Hyderabad</title>
         <meta name="description" content="Order fresh flowers online in Hyderabad. Sowgandhika Flowers offers daily Pooja flowers, traditional garlands, bridal hair flowers, and customized subscriptions." />
-        <link rel="canonical" href="https://sowgandhikaflowers.com/" />
+        <link rel="canonical" href="https://sowgandhikafreshflowers.com/" />
       </Helmet>
 
       {/* ── HERO BANNER ── */}

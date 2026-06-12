@@ -21,6 +21,111 @@ export default function MySubscriptions() {
       .finally(() => setLoading(false));
   };
 
+  const formatDate = (dateStr) => {
+    if (!dateStr) return '—';
+    return new Date(dateStr).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+  };
+
+  const isSubscriptionExpired = (endDateStr) => {
+    if (!endDateStr) return false;
+    const endDate = new Date(endDateStr);
+    endDate.setHours(23, 59, 59, 999);
+    return new Date() > endDate;
+  };
+
+  const getNextDeliveryDate = (schedule) => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    
+    const dayAfter = new Date();
+    dayAfter.setDate(dayAfter.getDate() + 2);
+    
+    if (!schedule) return tomorrow;
+    
+    const s = schedule.toLowerCase();
+    if (s.includes('alternate')) {
+      return dayAfter;
+    }
+    return tomorrow;
+  };
+
+  const handlePrintSubscription = (sub) => {
+    const printWindow = window.open('', '_blank', 'width=800,height=600');
+    
+    const expired = isSubscriptionExpired(sub.end_date);
+    const nextDelivery = expired ? 'Expired' : formatDate(getNextDeliveryDate(sub.schedule));
+    
+    const html = `
+      <html>
+        <head>
+          <title>Print Subscription #${sub.id}</title>
+          <style>
+            body { font-family: 'Lato', sans-serif; color: #333; margin: 30px; line-height: 1.6; }
+            .header { text-align: center; border-bottom: 2px solid #2E4A2E; padding-bottom: 20px; margin-bottom: 30px; }
+            .title { font-family: 'Playfair Display', serif; color: #2E4A2E; margin: 0; font-size: 24px; }
+            .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; }
+            .section { margin-bottom: 25px; }
+            .section-title { font-size: 14px; text-transform: uppercase; color: #C9A86A; letter-spacing: 1px; margin-bottom: 10px; font-weight: bold; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+            .badge { padding: 3px 8px; border-radius: 3px; font-size: 12px; font-weight: bold; }
+            .badge-active { background: #e2f0d9; color: #385723; }
+            .badge-expired { background: #fce4d6; color: #c65911; }
+            @media print {
+              body { margin: 0; }
+              .no-print { display: none; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="no-print" style="margin-bottom: 20px; text-align: right;">
+            <button onclick="window.print()" style="padding: 10px 20px; background: #2E4A2E; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">Print Subscription</button>
+          </div>
+          <div class="header">
+            <h1 class="title">SOWGANDHIKA FLOWERS</h1>
+            <p style="margin: 5px 0 0; font-style: italic; color: #666;">Fresh Daily · Subscription Details</p>
+          </div>
+          
+          <div class="info-grid">
+            <div>
+              <strong>Subscription ID:</strong> #${sub.id}<br>
+              <strong>Product:</strong> ${sub.product_name}<br>
+              <strong>Schedule:</strong> ${sub.schedule}<br>
+              <strong>Price Per Day:</strong> ${sub.price_per_day ? `₹${sub.price_per_day}` : '—'}
+            </div>
+            <div style="text-align: right;">
+              <strong>Start Date:</strong> ${formatDate(sub.start_date)}<br>
+              <strong>End Date:</strong> ${formatDate(sub.end_date)}<br>
+              <strong>Next Delivery:</strong> ${nextDelivery}<br>
+              <strong>Status:</strong> <span class="badge ${expired ? 'badge-expired' : 'badge-active'}">${expired ? 'EXPIRED' : (sub.status || 'ACTIVE')}</span>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="section-title">Customer Details</div>
+            <div><strong>Name:</strong> ${sub.customer_name || 'Customer'}</div>
+            <div><strong>Email:</strong> ${sub.customer_email || '—'}</div>
+            ${sub.customer_phone || sub.phone ? `<div><strong>Phone:</strong> ${sub.customer_phone || sub.phone}</div>` : ''}
+          </div>
+
+          ${sub.customer_address || sub.address ? `
+          <div class="section">
+            <div class="section-title">Delivery Address</div>
+            <div>${sub.customer_address || sub.address}</div>
+          </div>
+          ` : ''}
+
+          <script>
+            window.onload = function() {
+              window.print();
+            }
+          </script>
+        </body>
+      </html>
+    `;
+    
+    printWindow.document.write(html);
+    printWindow.document.close();
+  };
+
   useEffect(() => { load(); }, [token]);
 
   const cancel = async (id) => {
@@ -59,11 +164,20 @@ export default function MySubscriptions() {
                       <span style={{ padding: '0.25rem 0.75rem', borderRadius: 100, backgroundColor: sc.bg, color: sc.color, border: `1px solid ${sc.border}`, fontSize: '0.8rem', fontWeight: 600 }}>{s.status}</span>
                     </div>
                     <p style={{ color: 'var(--color-text-muted)', fontSize: '0.88rem', margin: '0 0 0.25rem' }}>🔁 {s.schedule}</p>
-                    <p style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem', margin: 0 }}>Next Delivery: {s.next_delivery ? new Date(s.next_delivery).toLocaleDateString('en-IN') : '—'}</p>
+                    <p style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem', margin: 0 }}>
+                      Next Delivery: {isSubscriptionExpired(s.end_date) ? (
+                        <span style={{ color: '#dc2626', fontWeight: 600 }}>Expired</span>
+                      ) : (
+                        formatDate(getNextDeliveryDate(s.schedule))
+                      )}
+                    </p>
                   </div>
-                  {s.status !== 'Cancelled' && (
-                    <button onClick={() => cancel(s.id)} style={{ background: 'none', border: '1px solid #dc2626', color: '#dc2626', padding: '0.4rem 1rem', borderRadius: 'var(--radius-md)', cursor: 'pointer', fontFamily: 'var(--font-primary)', fontSize: '0.85rem' }}>Cancel</button>
-                  )}
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <button onClick={() => handlePrintSubscription(s)} style={{ background: 'none', border: '1px solid var(--color-primary)', color: 'var(--color-primary)', padding: '0.4rem 1rem', borderRadius: 'var(--radius-md)', cursor: 'pointer', fontFamily: 'var(--font-primary)', fontSize: '0.85rem' }}>Print</button>
+                    {s.status !== 'Cancelled' && !isSubscriptionExpired(s.end_date) && (
+                      <button onClick={() => cancel(s.id)} style={{ background: 'none', border: '1px solid #dc2626', color: '#dc2626', padding: '0.4rem 1rem', borderRadius: 'var(--radius-md)', cursor: 'pointer', fontFamily: 'var(--font-primary)', fontSize: '0.85rem' }}>Cancel</button>
+                    )}
+                  </div>
                 </motion.div>
               );
             })}

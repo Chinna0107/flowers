@@ -174,7 +174,7 @@ export default function Subscriptions() {
       <Helmet>
         <title>Flower Subscriptions | Sowgandhika Flowers</title>
         <meta name="description" content="Subscribe to daily, weekly or alternate-day fresh flower deliveries in Hyderabad. Perfect for morning Pooja rituals or bringing fresh blooms into your home." />
-        <link rel="canonical" href="https://sowgandhikaflowers.com/subscriptions" />
+        <link rel="canonical" href="https://sowgandhikafreshflowers.com/subscriptions" />
       </Helmet>
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} style={{ textAlign: 'center', marginBottom: '3.5rem' }}>
         <div style={{ width: 80, height: 80, borderRadius: '50%', border: '2px dashed var(--color-accent)', margin: '0 auto 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--color-bg)' }}>

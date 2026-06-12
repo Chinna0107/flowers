@@ -38,7 +38,7 @@ export default function Contact() {
       <Helmet>
         <title>Contact Us | Sowgandhika Flowers</title>
         <meta name="description" content="Get in touch with Sowgandhika Flowers in Hyderabad. Contact us for bulk orders, wedding bookings, garlands, Pooja flower deliveries, or custom flower subscriptions." />
-        <link rel="canonical" href="https://sowgandhikaflowers.com/contact" />
+        <link rel="canonical" href="https://sowgandhikafreshflowers.com/contact" />
       </Helmet>
 
       {/* ── HERO ── */}

@@ -31,7 +31,7 @@ export default function About() {
       <Helmet>
         <title>About Us | Sowgandhika Flowers</title>
         <meta name="description" content="Learn the story of Sowgandhika Flowers. We are an artisanal flower studio in Hyderabad delivering farm-fresh, custom-wrapped flower arrangements, Pooja flowers, and traditional garlands." />
-        <link rel="canonical" href="https://sowgandhikaflowers.com/about" />
+        <link rel="canonical" href="https://sowgandhikafreshflowers.com/about" />
       </Helmet>
 
       {/* ── HERO ── */}

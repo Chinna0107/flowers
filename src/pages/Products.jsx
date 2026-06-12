@@ -100,7 +100,7 @@ export default function Products() {
       <Helmet>
         <title>Our Flower Collection | Sowgandhika Flowers</title>
         <meta name="description" content="Browse our collection of fresh flowers online in Hyderabad. Sells premium garlands, Pooja basic/premium items, bridal Poola Jada, and flower jewellery." />
-        <link rel="canonical" href="https://sowgandhikaflowers.com/products" />
+        <link rel="canonical" href="https://sowgandhikafreshflowers.com/products" />
       </Helmet>
 
       {/* ── PAGE HERO ── */}

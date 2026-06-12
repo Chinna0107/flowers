@@ -42,7 +42,7 @@ export default function Footer() {
     <footer style={{ backgroundColor: "var(--color-primary)", borderTop: "4px solid var(--color-accent)", color: "#FAF7F2" }}>
 
       {/* ── MAIN GRID ── */}
-      <div style={{ maxWidth: 1380, margin: "0 auto", padding: "4rem 2rem 3rem", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "2.5rem" }}>
+      <div style={{ maxWidth: 1280, margin: "0 auto", padding: "4rem 2rem 3rem", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "2.5rem" }}>
 
         {/* ── COL 1: BRAND ── */}
         <div>
