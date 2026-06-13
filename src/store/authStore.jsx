@@ -1,21 +1,35 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 import { API } from '../config/api';
 
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [token, setToken] = useState(null);
-
-  useEffect(() => {
-    const stored = JSON.parse(localStorage.getItem('auth') || 'null');
-    if (stored?.user) {
-      setUser(stored.user);
-      setIsAdmin(stored.isAdmin || false);
-      setToken(stored.token || null);
+  const [user, setUser] = useState(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem('auth') || 'null');
+      return stored?.user || null;
+    } catch {
+      return null;
     }
-  }, []);
+  });
+
+  const [isAdmin, setIsAdmin] = useState(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem('auth') || 'null');
+      return stored?.isAdmin || false;
+    } catch {
+      return false;
+    }
+  });
+
+  const [token, setToken] = useState(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem('auth') || 'null');
+      return stored?.token || null;
+    } catch {
+      return null;
+    }
+  });
 
   const login = async (email, password) => {
     try {

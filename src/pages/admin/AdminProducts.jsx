@@ -85,6 +85,24 @@ export default function AdminProducts() {
     load();
   };
 
+  const handleToggleCoupon = async (id, currentVal) => {
+    try {
+      const res = await fetch(`${API}/products/${id}/toggle-coupon`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ eligible_for_coupon: !currentVal }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        alert(data.error || 'Failed to update coupon status');
+      } else {
+        load();
+      }
+    } catch (err) {
+      alert('Network error updating coupon status');
+    }
+  };
+
   const inp = {
     padding: '0.7rem 1rem',
     border: '1px solid var(--color-accent)',
@@ -192,7 +210,7 @@ export default function AdminProducts() {
           <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '800px' }}>
             <thead>
               <tr style={{ borderBottom: '2px solid var(--color-accent)' }}>
-                {['Image', 'Name', 'Category', 'Price/Unit', 'Our Price', 'MRP', 'Tag', 'Actions'].map(h => (
+                {['Image', 'Name', 'Category', 'Price/Unit', 'Our Price', 'MRP', 'Tag', 'Coupon Eligible', 'Actions'].map(h => (
                   <th key={h} style={{ textAlign: 'left', padding: '0.75rem', fontFamily: 'var(--font-serif)', color: 'var(--color-primary)', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: 1 }}>{h}</th>
                 ))}
               </tr>
@@ -211,6 +229,24 @@ export default function AdminProducts() {
                   <td style={{ padding: '0.75rem' }}>
                     {p.tag && <span style={{ background: 'var(--color-primary)', color: 'var(--color-secondary)', padding: '0.2rem 0.6rem', borderRadius: '12px', fontSize: '0.75rem' }}>{p.tag}</span>}
                   </td>
+                  <td style={{ padding: '0.75rem' }}>
+                    <button 
+                      onClick={() => handleToggleCoupon(p.id, p.eligible_for_coupon)}
+                      style={{
+                        padding: '0.35rem 0.85rem',
+                        fontSize: '0.8rem',
+                        borderRadius: 'var(--radius-md)',
+                        cursor: 'pointer',
+                        fontWeight: 600,
+                        border: '1px solid ' + (p.eligible_for_coupon ? 'var(--color-primary)' : '#ccc'),
+                        backgroundColor: p.eligible_for_coupon ? 'var(--color-primary)' : 'transparent',
+                        color: p.eligible_for_coupon ? 'var(--color-secondary)' : '#666',
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      {p.eligible_for_coupon ? 'Yes' : 'No'}
+                    </button>
+                  </td>
                   <td style={{ padding: '0.75rem', display: 'flex', gap: '0.5rem' }}>
                     <button onClick={() => handleEdit(p)} className="btn-outline" style={{ padding: '0.35rem 0.85rem', fontSize: '0.8rem' }}>Edit</button>
                     <button onClick={() => handleDelete(p.id)} style={{ background: 'none', border: '1px solid #dc2626', color: '#dc2626', padding: '0.35rem 0.7rem', borderRadius: 'var(--radius-md)', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600 }}>Delete</button>
@@ -218,7 +254,7 @@ export default function AdminProducts() {
                 </tr>
               ))}
               {products.length === 0 && (
-                <tr><td colSpan={8} style={{ padding: '3rem', textAlign: 'center', color: 'var(--color-text-muted)' }}>No products yet. Add your first product!</td></tr>
+                <tr><td colSpan={9} style={{ padding: '3rem', textAlign: 'center', color: 'var(--color-text-muted)' }}>No products yet. Add your first product!</td></tr>
               )}
             </tbody>
           </table>

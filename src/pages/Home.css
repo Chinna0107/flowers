@@ -6,7 +6,7 @@
   aspect-ratio: 16 / 9;
   min-height: 720px;
   max-height: 1080px;
-  background-image: url('https://images.unsplash.com/photo-1582794543139-8ac9cb0f7b11?w=1920&h=1080&fit=crop&q=90');
+  background-image: url('/god-hero-flowers.png');
   background-size: cover;
   background-position: center 40%;
   display: flex;

@@ -7,6 +7,20 @@ export default function AdminSubscriptions() {
   const { token } = useAuth();
   const [subs, setSubs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState('All');
+
+  const formatDate = (dateStr) => {
+    if (!dateStr) return '—';
+    return new Date(dateStr).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+  };
+
+  const isSubscriptionExpired = (endDateStr, status) => {
+    if (status === 'Paused') return false;
+    if (!endDateStr) return false;
+    const endDate = new Date(endDateStr);
+    endDate.setHours(23, 59, 59, 999);
+    return new Date() > endDate;
+  };
 
   const load = () => {
     if (!token) return;
@@ -16,18 +30,27 @@ export default function AdminSubscriptions() {
       .finally(() => setLoading(false));
   };
 
+  const filteredSubs = subs.filter(s => {
+    if (filter === 'All') return true;
+    const expired = isSubscriptionExpired(s.end_date, s.status);
+    if (filter === 'Expired') return expired && s.status !== 'Paused';
+    if (filter === 'Active') return s.status === 'Active' && !expired;
+    return s.status === filter;
+  });
+
   useEffect(() => { load(); }, [token]);
 
-  const formatDate = (dateStr) => {
-    if (!dateStr) return '—';
-    return new Date(dateStr).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
-  };
-
-  const isSubscriptionExpired = (endDateStr) => {
-    if (!endDateStr) return false;
-    const endDate = new Date(endDateStr);
-    endDate.setHours(23, 59, 59, 999);
-    return new Date() > endDate;
+  const getStatusBadge = (status) => {
+    const badges = {
+      Active: { bg: 'rgba(46,74,46,0.1)', color: '#2E4A2E', border: 'rgba(46,74,46,0.3)' },
+      Paused: { bg: 'rgba(201,168,106,0.15)', color: '#b58b3c', border: 'rgba(201,168,106,0.5)' },
+      Cancelled: { bg: 'rgba(0,0,0,0.05)', color: '#666', border: 'rgba(0,0,0,0.1)' },
+      Inactive: { bg: 'rgba(220,38,38,0.05)', color: '#dc2626', border: 'rgba(220,38,38,0.1)' },
+    };
+    const sc = badges[status] || badges.Active;
+    return <span style={{ padding: '0.25rem 0.65rem', borderRadius: 100, backgroundColor: sc.bg, color: sc.color, border: `1px solid ${sc.border}`, fontSize: '0.75rem', fontWeight: 600 }}>
+      {status}
+    </span>;
   };
 
   const getNextDeliveryDate = (schedule) => {
@@ -49,8 +72,8 @@ export default function AdminSubscriptions() {
   const handlePrintSubscription = (sub) => {
     const printWindow = window.open('', '_blank', 'width=800,height=600');
     
-    const expired = isSubscriptionExpired(sub.end_date);
-    const nextDelivery = expired ? 'Expired' : formatDate(getNextDeliveryDate(sub.schedule));
+    const expired = isSubscriptionExpired(sub.end_date, sub.status);
+    const nextDelivery = sub.status === 'Paused' ? 'Paused' : expired ? 'Expired' : formatDate(sub.next_delivery);
     
     const html = `
       <html>
@@ -65,6 +88,7 @@ export default function AdminSubscriptions() {
             .section-title { font-size: 14px; text-transform: uppercase; color: #C9A86A; letter-spacing: 1px; margin-bottom: 10px; font-weight: bold; border-bottom: 1px solid #eee; padding-bottom: 5px; }
             .badge { padding: 3px 8px; border-radius: 3px; font-size: 12px; font-weight: bold; }
             .badge-active { background: #e2f0d9; color: #385723; }
+            .badge-paused { background: #fff2cc; color: #b58b3c; }
             .badge-expired { background: #fce4d6; color: #c65911; }
             @media print {
               body { margin: 0; }
@@ -92,7 +116,7 @@ export default function AdminSubscriptions() {
               <strong>Start Date:</strong> ${formatDate(sub.start_date)}<br>
               <strong>End Date:</strong> ${formatDate(sub.end_date)}<br>
               <strong>Next Delivery:</strong> ${nextDelivery}<br>
-              <strong>Status:</strong> <span class="badge ${expired ? 'badge-expired' : 'badge-active'}">${expired ? 'EXPIRED' : (sub.status || 'ACTIVE')}</span>
+              <strong>Status:</strong> <span class="badge ${sub.status === 'Paused' ? 'badge-paused' : (expired ? 'badge-expired' : 'badge-active')}">${expired ? 'EXPIRED' : (sub.status || 'ACTIVE').toUpperCase()}</span>
             </div>
           </div>
 
@@ -138,10 +162,17 @@ export default function AdminSubscriptions() {
   return (
     <div>
       <div style={{ marginBottom: '2rem' }}>
-        <h1 style={{ fontFamily: 'var(--font-serif)', color: 'var(--color-primary)', fontSize: '2.2rem', margin: 0 }}>Active Subscriptions</h1>
+        <h1 style={{ fontFamily: 'var(--font-serif)', color: 'var(--color-primary)', fontSize: '2.2rem', margin: 0 }}>Subscriptions</h1>
         <p style={{ color: 'var(--color-text-muted)', margin: '0.5rem 0 0', fontSize: '0.9rem' }}>
-          Manage all active recurring delivery plans • Total: <strong>{subs.length}</strong>
+          Manage all recurring flower delivery plans • Total: <strong>{filteredSubs.length}</strong>
         </p>
+      </div>
+
+      <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
+        {['All', 'Active', 'Paused', 'Cancelled', 'Expired'].map(f => (
+          <button key={f} onClick={() => setFilter(f)} className={filter === f ? 'btn-primary' : 'btn-outline'}
+            style={{ padding: '0.35rem 1rem', fontSize: '0.85rem' }}>{f}</button>
+        ))}
       </div>
 
       <div className="glass" style={{ padding: '1.5rem', overflowX: 'auto' }}>
@@ -151,45 +182,51 @@ export default function AdminSubscriptions() {
           <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '900px' }}>
             <thead>
               <tr style={{ borderBottom: '2px solid var(--color-accent)' }}>
-                {['ID', 'Customer', 'Product', 'Schedule', 'Start Date', 'End Date', 'Next Delivery', 'Price/Day', 'Actions'].map(h => (
+                {['ID', 'Customer', 'Product', 'Schedule', 'Status', 'Start Date', 'End Date', 'Next Delivery', 'Price/Day', 'Actions'].map(h => (
                   <th key={h} style={{ textAlign: 'left', padding: '0.75rem', fontFamily: 'var(--font-serif)', color: 'var(--color-primary)', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: 1 }}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {subs.map(s => (
-                <tr key={s.id} style={{ borderBottom: '1px solid rgba(201,168,106,0.2)' }}>
-                  <td style={{ padding: '0.75rem', fontFamily: 'var(--font-serif)', fontWeight: 600, color: 'var(--color-primary)', fontSize: '0.85rem' }}>
-                    {s.id}
-                  </td>
-                  <td style={{ padding: '0.75rem' }}>
-                    <p style={{ margin: 0, fontWeight: 600, color: 'var(--color-text)', fontSize: '0.9rem' }}>{s.customer_name}</p>
-                    <p style={{ margin: '0.15rem 0 0', fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>{s.customer_email}</p>
-                  </td>
-                  <td style={{ padding: '0.75rem', color: 'var(--color-text)', fontWeight: 500 }}>{s.product_name}</td>
-                  <td style={{ padding: '0.75rem' }}>{getScheduleBadge(s.schedule)}</td>
-                  <td style={{ padding: '0.75rem', color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>{formatDate(s.start_date)}</td>
-                  <td style={{ padding: '0.75rem', color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>{formatDate(s.end_date)}</td>
-                  <td style={{ padding: '0.75rem', color: 'var(--color-accent)', fontWeight: 600, fontSize: '0.85rem' }}>
-                    {isSubscriptionExpired(s.end_date) ? (
-                      <span style={{ color: '#dc2626', fontWeight: 600 }}>Expired</span>
-                    ) : (
-                      formatDate(getNextDeliveryDate(s.schedule))
-                    )}
-                  </td>
-                  <td style={{ padding: '0.75rem', color: 'var(--color-text)', fontWeight: 600 }}>
-                    {s.price_per_day ? `₹${s.price_per_day}` : '—'}
-                  </td>
-                  <td style={{ padding: '0.75rem' }}>
-                    <button onClick={() => handlePrintSubscription(s)} className="btn-outline" style={{ padding: '0.35rem 0.85rem', fontSize: '0.8rem' }}>
-                      Print
-                    </button>
-                  </td>
-                </tr>
-              ))}
-              {subs.length === 0 && (
-                <tr><td colSpan={9} style={{ padding: '3rem', textAlign: 'center', color: 'var(--color-text-muted)' }}>
-                  No active subscriptions at the moment.
+              {filteredSubs.map(s => {
+                const expired = isSubscriptionExpired(s.end_date, s.status);
+                return (
+                  <tr key={s.id} style={{ borderBottom: '1px solid rgba(201,168,106,0.2)' }}>
+                    <td style={{ padding: '0.75rem', fontFamily: 'var(--font-serif)', fontWeight: 600, color: 'var(--color-primary)', fontSize: '0.85rem' }}>
+                      {s.id}
+                    </td>
+                    <td style={{ padding: '0.75rem' }}>
+                      <p style={{ margin: 0, fontWeight: 600, color: 'var(--color-text)', fontSize: '0.9rem' }}>{s.customer_name}</p>
+                      <p style={{ margin: '0.15rem 0 0', fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>{s.customer_email}</p>
+                    </td>
+                    <td style={{ padding: '0.75rem', color: 'var(--color-text)', fontWeight: 500 }}>{s.product_name}</td>
+                    <td style={{ padding: '0.75rem' }}>{getScheduleBadge(s.schedule)}</td>
+                    <td style={{ padding: '0.75rem' }}>{getStatusBadge(s.status)}</td>
+                    <td style={{ padding: '0.75rem', color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>{formatDate(s.start_date)}</td>
+                    <td style={{ padding: '0.75rem', color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>{formatDate(s.end_date)}</td>
+                    <td style={{ padding: '0.75rem', color: 'var(--color-accent)', fontWeight: 600, fontSize: '0.85rem' }}>
+                      {s.status === 'Paused' ? (
+                        <span style={{ color: 'var(--color-accent)', fontWeight: 600 }}>Paused</span>
+                      ) : expired ? (
+                        <span style={{ color: '#dc2626', fontWeight: 600 }}>Expired</span>
+                      ) : (
+                        formatDate(s.next_delivery)
+                      )}
+                    </td>
+                    <td style={{ padding: '0.75rem', color: 'var(--color-text)', fontWeight: 600 }}>
+                      {s.price_per_day ? `₹${s.price_per_day}` : '—'}
+                    </td>
+                    <td style={{ padding: '0.75rem' }}>
+                      <button onClick={() => handlePrintSubscription(s)} className="btn-outline" style={{ padding: '0.35rem 0.85rem', fontSize: '0.8rem' }}>
+                        Print
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+              {filteredSubs.length === 0 && (
+                <tr><td colSpan={10} style={{ padding: '3rem', textAlign: 'center', color: 'var(--color-text-muted)' }}>
+                  No subscriptions match the selected filter.
                 </td></tr>
               )}
             </tbody>

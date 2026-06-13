@@ -48,7 +48,7 @@ export default function Footer() {
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1.25rem" }}>
             <img src={logo} alt="Sowgandhika" style={{ width: 52, height: 52, borderRadius: "50%", objectFit: "cover", border: "2px solid var(--color-accent)" }} />
-            <span style={{ fontFamily: "'Playfair Display', serif", fontSize: "1.5rem", fontWeight: 700, color: "#FAF7F2" }}>Sowgandhika</span>
+            <span style={{ fontFamily: "'Playfair Display', serif", fontSize: "1.2rem", fontWeight: 700, color: "#FAF7F2" }}>Sowgandhika Fresh Flowers</span>
           </div>
           <p style={{ color: "rgba(250,247,242,0.7)", fontSize: "0.88rem", lineHeight: 1.75, marginBottom: "1.5rem", maxWidth: 260 }}>
             Hyderabad's trusted artisanal flower studio. Fresh blooms sourced daily — from morning pooja to bridal moments.

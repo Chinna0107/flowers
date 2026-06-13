@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "../store/authStore";
 import { API } from "../config/api";
-import { Calendar, Repeat, Flower2, Zap } from "lucide-react";
+import { Calendar, Repeat, Flower2, Zap, ArrowLeft, ShieldCheck, MapPin } from "lucide-react";
+import Swal from "sweetalert2";
 
 const PLANS = [
   { id: 'monthly', label: 'Monthly', icon: <Calendar size={24} />, desc: 'Delivery every 30 days', days: 30 },
@@ -20,6 +21,10 @@ export default function Subscriptions() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [loadingProducts, setLoadingProducts] = useState(true);
+  const [step, setStep] = useState("configure"); // "configure" or "address"
+  const [address, setAddress] = useState({ name: '', flat: '', building: '', street: '', city: 'Hyderabad', pincode: '', phone: '' });
+  const setAddr = (k) => (e) => setAddress(p => ({ ...p, [k]: e.target.value }));
+  
   const { user, token } = useAuth();
   const navigate = useNavigate();
 
@@ -39,6 +44,21 @@ export default function Subscriptions() {
         setLoadingProducts(false);
       });
   }, []);
+
+  useEffect(() => {
+    if (!token) return;
+    fetch(`${API}/auth/profile`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.json())
+      .then(data => {
+        if (data.name) setAddress(p => ({ ...p, name: data.name }));
+        if (data.phone) setAddress(p => ({ ...p, phone: data.phone }));
+        if (data.address) {
+          // Pre-populate street field if profile has saved address
+          setAddress(p => ({ ...p, street: data.address }));
+        }
+      })
+      .catch(() => {});
+  }, [token]);
 
   const calculatePrice = () => {
     if (!product || !product.price_per_unit) return 0;
@@ -63,20 +83,51 @@ export default function Subscriptions() {
     });
   };
 
-  const handleContinue = async () => {
+  const handleProceedToAddress = () => {
     if (!user || !token) { 
       navigate('/signin'); 
       return; 
     }
+    setStep("address");
+  };
+
+  const handlePayment = async () => {
+    // Validate address fields
+    const requiredFields = ['name', 'flat', 'building', 'street', 'pincode', 'phone'];
+    const fieldLabels = {
+      name: 'Full Name',
+      flat: 'Flat / Door No',
+      building: 'Building Name',
+      street: 'Street / Area Name',
+      pincode: 'Pincode',
+      phone: 'Phone Number'
+    };
+    for (const field of requiredFields) {
+      if (!address[field] || !address[field].trim()) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Missing Field',
+          text: `Please enter your ${fieldLabels[field]}. All address fields are required.`,
+          confirmButtonColor: '#2E4A2E'
+        });
+        return;
+      }
+    }
 
     setLoading(true);
     const totalPrice = calculatePrice();
+    const fullAddress = `${address.name}, ${address.flat}, ${address.building}, ${address.street}, Hyderabad - ${address.pincode} (Tel: ${address.phone})`;
 
     try {
       // Load Razorpay script
       const scriptLoaded = await loadRazorpayScript();
       if (!scriptLoaded) {
-        alert('Failed to load payment gateway. Please try again.');
+        Swal.fire({
+          icon: 'error',
+          title: 'Gateway Error',
+          text: 'Failed to load payment gateway. Please try again.',
+          confirmButtonColor: '#2E4A2E'
+        });
         setLoading(false);
         return;
       }
@@ -90,7 +141,8 @@ export default function Subscriptions() {
           schedule,
           n_days: schedule === 'n_days' ? nDays : undefined,
           price_per_day: product.price_per_unit,
-          total: totalPrice
+          total: totalPrice,
+          address: fullAddress
         }),
       });
 
@@ -122,10 +174,21 @@ export default function Subscriptions() {
             const verifyData = await verifyRes.json();
             if (!verifyRes.ok) throw new Error(verifyData.error);
 
-            alert(`✅ Payment successful! Subscription activated: ${verifyData.subscription.id}`);
-            navigate('/my-subscriptions');
+            Swal.fire({
+              icon: 'success',
+              title: 'Subscription Activated!',
+              text: `✅ Subscription successfully activated: ${verifyData.subscription.id}`,
+              confirmButtonColor: '#2E4A2E'
+            }).then(() => {
+              navigate('/my-subscriptions');
+            });
           } catch (err) {
-            alert('Payment verification failed: ' + err.message);
+            Swal.fire({
+              icon: 'error',
+              title: 'Verification Failed',
+              text: 'Payment verification failed: ' + err.message,
+              confirmButtonColor: '#2E4A2E'
+            });
           }
         },
         prefill: {
@@ -139,11 +202,21 @@ export default function Subscriptions() {
 
       const razorpay = new window.Razorpay(options);
       razorpay.on('payment.failed', function (response) {
-        alert('Payment failed: ' + response.error.description);
+        Swal.fire({
+          icon: 'error',
+          title: 'Payment Failed',
+          text: 'Payment failed: ' + response.error.description,
+          confirmButtonColor: '#2E4A2E'
+        });
       });
       razorpay.open();
     } catch (err) {
-      alert(err.message || 'Subscription failed');
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: err.message || 'Subscription failed',
+        confirmButtonColor: '#2E4A2E'
+      });
     } finally {
       setLoading(false);
     }
@@ -176,6 +249,7 @@ export default function Subscriptions() {
         <meta name="description" content="Subscribe to daily, weekly or alternate-day fresh flower deliveries in Hyderabad. Perfect for morning Pooja rituals or bringing fresh blooms into your home." />
         <link rel="canonical" href="https://sowgandhikafreshflowers.com/subscriptions" />
       </Helmet>
+      
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} style={{ textAlign: 'center', marginBottom: '3.5rem' }}>
         <div style={{ width: 80, height: 80, borderRadius: '50%', border: '2px dashed var(--color-accent)', margin: '0 auto 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--color-bg)' }}>
           <Flower2 size={32} color="var(--color-accent)" />
@@ -187,81 +261,141 @@ export default function Subscriptions() {
       <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1 }}
         style={{ background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(16px)', border: '1px solid rgba(201,168,106,0.3)', borderRadius: '24px', padding: '3rem', boxShadow: '0 16px 40px rgba(46,74,46,0.06)' }}>
 
-        {/* Product Select */}
-        <div style={{ marginBottom: '2.5rem' }}>
-          <label style={{ display: 'block', fontFamily: 'Playfair Display, serif', fontSize: '1.2rem', color: 'var(--color-primary)', marginBottom: '0.75rem', fontWeight: 600 }}>Choose Your Flower</label>
-          <div style={{ position: 'relative' }}>
-            <select value={product ? product.id : ''} onChange={e => setProduct(products.find(p => p.id === parseInt(e.target.value)))}
-              style={{ width: '100%', padding: '1rem 1.5rem', border: '1px solid rgba(201,168,106,0.5)', borderRadius: '12px', fontFamily: 'Lato, sans-serif', fontSize: '1.1rem', backgroundColor: '#fff', color: 'var(--color-text)', cursor: 'pointer', outline: 'none', appearance: 'none' }}>
-              {products.map(p => (
-                <option key={p.id} value={p.id}>{p.name} - ₹{p.price_per_unit}/day</option>
-              ))}
-            </select>
-            <div style={{ position: 'absolute', right: '1.5rem', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: 'var(--color-accent)' }}>▼</div>
-          </div>
-        </div>
-
-        {/* Plans */}
-        <p style={{ fontFamily: 'Playfair Display, serif', fontSize: '1.2rem', color: 'var(--color-primary)', fontWeight: 600, marginBottom: '1rem' }}>Choose Your Schedule</p>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
-          {PLANS.map(p => (
-            <motion.button whileHover={{ y: -2 }} whileTap={{ scale: 0.98 }} key={p.id} onClick={() => setSchedule(p.id)}
-              style={{ padding: '1.5rem 1rem', border: `2px solid ${schedule === p.id ? 'var(--color-primary)' : 'rgba(201,168,106,0.3)'}`, borderRadius: '16px', cursor: 'pointer', textAlign: 'center', backgroundColor: schedule === p.id ? 'var(--color-primary)' : '#fff', color: schedule === p.id ? '#FAF7F2' : 'var(--color-primary)', transition: 'all 0.3s', boxShadow: schedule === p.id ? '0 8px 24px rgba(46,74,46,0.2)' : 'none' }}>
-              <div style={{ marginBottom: '1rem', color: schedule === p.id ? 'var(--color-accent)' : 'var(--color-primary)' }}>{p.icon}</div>
-              <div style={{ fontFamily: 'Playfair Display, serif', fontWeight: 700, fontSize: '1.1rem', marginBottom: '0.5rem' }}>{p.label}</div>
-              <div style={{ fontSize: '0.85rem', opacity: 0.8, lineHeight: 1.4 }}>{p.desc}</div>
-              {!p.custom && product && (
-                <div style={{ marginTop: '0.75rem', fontSize: '1.1rem', fontWeight: 700 }}>
-                  ₹{product.price_per_unit * p.days}
+        <AnimatePresence mode="wait">
+          {step === "configure" ? (
+            <motion.div key="configure" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }}>
+              {/* Product Select */}
+              <div style={{ marginBottom: '2.5rem' }}>
+                <label style={{ display: 'block', fontFamily: 'Playfair Display, serif', fontSize: '1.2rem', color: 'var(--color-primary)', marginBottom: '0.75rem', fontWeight: 600 }}>Choose Your Flower</label>
+                <div style={{ position: 'relative' }}>
+                  <select value={product ? product.id : ''} onChange={e => setProduct(products.find(p => p.id === parseInt(e.target.value)))}
+                    style={{ width: '100%', padding: '1rem 1.5rem', border: '1px solid rgba(201,168,106,0.5)', borderRadius: '12px', fontFamily: 'Lato, sans-serif', fontSize: '1.1rem', backgroundColor: '#fff', color: 'var(--color-text)', cursor: 'pointer', outline: 'none', appearance: 'none' }}>
+                    {products.map(p => (
+                      <option key={p.id} value={p.id}>{p.name} - ₹{p.price_per_unit}/day</option>
+                    ))}
+                  </select>
+                  <div style={{ position: 'absolute', right: '1.5rem', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: 'var(--color-accent)' }}>▼</div>
                 </div>
-              )}
-            </motion.button>
-          ))}
-        </div>
-
-        {schedule === 'n_days' && (
-          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} style={{ marginBottom: '2rem', padding: '2rem', backgroundColor: '#fff', border: '1px dashed var(--color-accent)', borderRadius: '16px', textAlign: 'center' }}>
-            <label style={{ display: 'block', fontFamily: 'Playfair Display, serif', fontSize: '1.2rem', color: 'var(--color-primary)', marginBottom: '1rem', fontWeight: 600 }}>How many days?</label>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem', marginBottom: '1rem' }}>
-              <button onClick={() => setNDays(Math.max(1, nDays - 1))} style={{ width: 44, height: 44, borderRadius: '50%', border: '1px solid var(--color-accent)', background: '#fff', color: 'var(--color-primary)', cursor: 'pointer', fontSize: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>−</button>
-              <input type="number" min="1" max="90" value={nDays} onChange={e => setNDays(Math.min(90, Math.max(1, +e.target.value)))}
-                style={{ width: 90, padding: '0.75rem', textAlign: 'center', border: '2px solid var(--color-primary)', borderRadius: '12px', fontFamily: 'Lato, sans-serif', fontSize: '1.5rem', fontWeight: 700, outline: 'none' }} />
-              <button onClick={() => setNDays(Math.min(90, nDays + 1))} style={{ width: 44, height: 44, borderRadius: '50%', border: '1px solid var(--color-accent)', background: '#fff', color: 'var(--color-primary)', cursor: 'pointer', fontSize: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
-            </div>
-            {product && (
-              <div style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--color-accent)' }}>
-                Total: ₹{product.price_per_unit} × {nDays} days = ₹{totalPrice}
               </div>
-            )}
-          </motion.div>
-        )}
 
-        <div style={{ borderTop: '1px dashed rgba(201,168,106,0.5)', paddingTop: '2.5rem', textAlign: 'center' }}>
-          <div style={{ marginBottom: '2rem' }}>
-            <p style={{ fontFamily: 'Playfair Display, serif', fontSize: '1.2rem', color: 'var(--color-primary)', marginBottom: '0.5rem' }}>
-              <strong style={{ color: 'var(--color-accent)' }}>{product?.name}</strong> delivered{' '}
-              <strong>{
-                schedule === 'alternate' ? 'every 2 days for 30 days' : 
-                schedule === 'weekly' ? 'every 7 days' : 
-                schedule === 'monthly' ? 'every 30 days' : 
-                `daily for ${nDays} days`
-              }</strong>
-            </p>
-            <div style={{ fontSize: '2rem', fontWeight: 700, color: 'var(--color-primary)', marginTop: '1rem' }}>
-              Total: ₹{totalPrice}
-            </div>
-            <div style={{ fontSize: '0.9rem', color: 'var(--color-text-muted)', marginTop: '0.5rem' }}>
-              ₹{product?.price_per_unit}/day × {schedule === 'n_days' ? nDays : PLANS.find(p => p.id === schedule)?.days} days
-            </div>
-          </div>
-          <motion.button whileHover={{ y: -2 }} whileTap={{ scale: 0.98 }} className="btn-primary" onClick={handleContinue} disabled={loading}
-            style={{ width: '100%', maxWidth: 360, padding: '1.1rem', fontSize: '1.1rem', borderRadius: '12px', opacity: loading ? 0.7 : 1 }}>
-            {loading ? 'Processing...' : user ? 'Pay with Razorpay' : 'Login to Subscribe'}
-          </motion.button>
-          <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem', marginTop: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
-            <Zap size={14} /> Secure payment · Cancel anytime
-          </p>
-        </div>
+              {/* Plans */}
+              <p style={{ fontFamily: 'Playfair Display, serif', fontSize: '1.2rem', color: 'var(--color-primary)', fontWeight: 600, marginBottom: '1rem' }}>Choose Your Schedule</p>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
+                {PLANS.map(p => (
+                  <motion.button whileHover={{ y: -2 }} whileTap={{ scale: 0.98 }} key={p.id} onClick={() => setSchedule(p.id)}
+                    style={{ padding: '1.5rem 1rem', border: `2px solid ${schedule === p.id ? 'var(--color-primary)' : 'rgba(201,168,106,0.3)'}`, borderRadius: '16px', cursor: 'pointer', textAlign: 'center', backgroundColor: schedule === p.id ? 'var(--color-primary)' : '#fff', color: schedule === p.id ? '#FAF7F2' : 'var(--color-primary)', transition: 'all 0.3s', boxShadow: schedule === p.id ? '0 8px 24px rgba(46,74,46,0.2)' : 'none' }}>
+                    <div style={{ marginBottom: '1rem', color: schedule === p.id ? 'var(--color-accent)' : 'var(--color-primary)' }}>{p.icon}</div>
+                    <div style={{ fontFamily: 'Playfair Display, serif', fontWeight: 700, fontSize: '1.1rem', marginBottom: '0.5rem' }}>{p.label}</div>
+                    <div style={{ fontSize: '0.85rem', opacity: 0.8, lineHeight: 1.4 }}>{p.desc}</div>
+                    {!p.custom && product && (
+                      <div style={{ marginTop: '0.75rem', fontSize: '1.1rem', fontWeight: 700 }}>
+                        ₹{product.price_per_unit * p.days}
+                      </div>
+                    )}
+                  </motion.button>
+                ))}
+              </div>
+
+              {schedule === 'n_days' && (
+                <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} style={{ marginBottom: '2rem', padding: '2rem', backgroundColor: '#fff', border: '1px dashed var(--color-accent)', borderRadius: '16px', textAlign: 'center' }}>
+                  <label style={{ display: 'block', fontFamily: 'Playfair Display, serif', fontSize: '1.2rem', color: 'var(--color-primary)', marginBottom: '1rem', fontWeight: 600 }}>How many days?</label>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem', marginBottom: '1rem' }}>
+                    <button onClick={() => setNDays(Math.max(1, nDays - 1))} style={{ width: 44, height: 44, borderRadius: '50%', border: '1px solid var(--color-accent)', background: '#fff', color: 'var(--color-primary)', cursor: 'pointer', fontSize: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>−</button>
+                    <input type="number" min="1" max="90" value={nDays} onChange={e => setNDays(Math.min(90, Math.max(1, +e.target.value)))}
+                      style={{ width: 90, padding: '0.75rem', textAlign: 'center', border: '2px solid var(--color-primary)', borderRadius: '12px', fontFamily: 'Lato, sans-serif', fontSize: '1.5rem', fontWeight: 700, outline: 'none' }} />
+                    <button onClick={() => setNDays(Math.min(90, nDays + 1))} style={{ width: 44, height: 44, borderRadius: '50%', border: '1px solid var(--color-accent)', background: '#fff', color: 'var(--color-primary)', cursor: 'pointer', fontSize: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
+                  </div>
+                  {product && (
+                    <div style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--color-accent)' }}>
+                      Total: ₹{product.price_per_unit} × {nDays} days = ₹{totalPrice}
+                    </div>
+                  )}
+                </motion.div>
+              )}
+
+              <div style={{ borderTop: '1px dashed rgba(201,168,106,0.5)', paddingTop: '2.5rem', textAlign: 'center' }}>
+                <div style={{ marginBottom: '2rem' }}>
+                  <p style={{ fontFamily: 'Playfair Display, serif', fontSize: '1.2rem', color: 'var(--color-primary)', marginBottom: '0.5rem' }}>
+                    <strong style={{ color: 'var(--color-accent)' }}>{product?.name}</strong> delivered{' '}
+                    <strong>{
+                      schedule === 'alternate' ? 'every 2 days for 30 days' : 
+                      schedule === 'weekly' ? 'every 7 days' : 
+                      schedule === 'monthly' ? 'every 30 days' : 
+                      `daily for ${nDays} days`
+                    }</strong>
+                  </p>
+                  <div style={{ fontSize: '2rem', fontWeight: 700, color: 'var(--color-primary)', marginTop: '1rem' }}>
+                    Total: ₹{totalPrice}
+                  </div>
+                  <div style={{ fontSize: '0.9rem', color: 'var(--color-text-muted)', marginTop: '0.5rem' }}>
+                    ₹{product?.price_per_unit}/day × {schedule === 'n_days' ? nDays : PLANS.find(p => p.id === schedule)?.days} days
+                  </div>
+                </div>
+                <motion.button whileHover={{ y: -2 }} whileTap={{ scale: 0.98 }} className="btn-primary" onClick={handleProceedToAddress}
+                  style={{ width: '100%', maxWidth: 360, padding: '1.1rem', fontSize: '1.1rem', borderRadius: '12px' }}>
+                  {user ? 'Proceed to Delivery Address' : 'Login to Subscribe'}
+                </motion.button>
+                <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem', marginTop: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+                  <Zap size={14} /> Secure payment · Cancel anytime
+                </p>
+              </div>
+            </motion.div>
+          ) : (
+            <motion.div key="address" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }}>
+              <button onClick={() => setStep("configure")} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'none', border: 'none', color: 'var(--color-accent)', cursor: 'pointer', fontFamily: 'Playfair Display, serif', fontSize: '1.1rem', fontWeight: 600, marginBottom: '2.0rem', padding: 0 }}>
+                <ArrowLeft size={18} /> Back to Configuration
+              </button>
+
+              <h2 style={{ fontFamily: 'Playfair Display, serif', color: 'var(--color-primary)', fontSize: '1.6rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <MapPin size={24} color="var(--color-accent)" /> Delivery Address Details
+              </h2>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '2.5rem', textAlign: 'left' }}>
+                {[
+                  ['name', 'Full Name', 'text'],
+                  ['flat', 'Flat / Door No', 'text'],
+                  ['building', 'Building Name', 'text'],
+                  ['street', 'Street / Area Name', 'text'],
+                  ['pincode', 'Pincode', 'text'],
+                  ['phone', 'Phone Number', 'tel']
+                ].map(([k, l, t]) => (
+                  <div key={k} style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', gridColumn: k === 'street' ? 'span 2' : 'auto' }}>
+                    <label style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--color-primary)' }}>{l} *</label>
+                    <input 
+                      type={t} 
+                      placeholder={l} 
+                      value={address[k]} 
+                      onChange={setAddr(k)} 
+                      style={{ padding: '0.8rem 1rem', border: '1px solid rgba(201,168,106,0.5)', borderRadius: '8px', fontFamily: 'Lato, sans-serif', outline: 'none', fontSize: '1.0rem' }} 
+                    />
+                  </div>
+                ))}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                  <label style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--color-primary)' }}>City</label>
+                  <input type="text" value="Hyderabad" readOnly style={{ padding: '0.8rem 1rem', border: '1px solid rgba(201,168,106,0.3)', borderRadius: '8px', fontFamily: 'Lato, sans-serif', fontSize: '1.0rem', background: 'rgba(0,0,0,0.03)', color: 'var(--color-text-muted)' }} />
+                </div>
+              </div>
+
+              <div style={{ borderTop: '1px dashed rgba(201,168,106,0.5)', paddingTop: '2.5rem', textAlign: 'center' }}>
+                <div style={{ marginBottom: '2rem' }}>
+                  <div style={{ fontSize: '2rem', fontWeight: 700, color: 'var(--color-primary)' }}>
+                    Total: ₹{totalPrice}
+                  </div>
+                  <p style={{ fontSize: '0.9rem', color: 'var(--color-text-muted)', marginTop: '0.35rem' }}>
+                    Free Delivery included. Secure payment via Razorpay.
+                  </p>
+                </div>
+                <motion.button whileHover={{ y: -2 }} whileTap={{ scale: 0.98 }} className="btn-primary" onClick={handlePayment} disabled={loading}
+                  style={{ width: '100%', maxWidth: 360, padding: '1.1rem', fontSize: '1.1rem', borderRadius: '12px', opacity: loading ? 0.7 : 1 }}>
+                  {loading ? 'Processing...' : 'Pay with Razorpay'}
+                </motion.button>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem', marginTop: '1.25rem', color: '#27ae60', fontSize: '0.85rem' }}>
+                  <ShieldCheck size={16} /> 100% Secure Payment
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.div>
     </div>
   );

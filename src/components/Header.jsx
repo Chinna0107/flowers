@@ -46,8 +46,8 @@ export default function Header() {
             width: 78, height: 78, borderRadius: '50%',
             objectFit: 'cover', border: '2px solid var(--color-accent)', flexShrink: 0
           }} />
-          <span style={{ fontFamily: 'var(--font-serif)', color: 'var(--color-primary)', fontSize: '1.4rem', fontWeight: 700 }}>
-            Sowgandhika
+          <span style={{ fontFamily: 'var(--font-serif)', color: 'var(--color-primary)', fontSize: '1.1rem', fontWeight: 700 }}>
+            <strong>Sowgandhika Fresh Flowers</strong>
           </span>
         </Link>
 

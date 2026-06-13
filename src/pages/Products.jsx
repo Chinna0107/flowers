@@ -107,7 +107,7 @@ export default function Products() {
       <div className="products-hero">
         <div className="products-hero-overlay" />
         <div className="products-hero-content">
-          <h1>Our Collection</h1>
+          <h1 style={{ lineHeight: '1.2' }}>Our Collection</h1>
           <p>Farm-fresh blooms for every tradition, occasion &amp; doorstep</p>
         </div>
       </div>

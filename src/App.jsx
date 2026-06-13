@@ -32,6 +32,7 @@ import AdminOrders from "./pages/admin/AdminOrders.jsx";
 import AdminProducts from "./pages/admin/AdminProducts.jsx";
 import AdminSubscriptions from "./pages/admin/AdminSubscriptions.jsx";
 import AdminReports from "./pages/admin/AdminReports.jsx";
+import AdminCoupons from "./pages/admin/AdminCoupons.jsx";
 
 function App() {
   return (
@@ -74,6 +75,7 @@ function App() {
               <Route path="orders" element={<AdminOrders />} />
               <Route path="subscriptions" element={<AdminSubscriptions />} />
               <Route path="reports" element={<AdminReports />} />
+              <Route path="coupons" element={<AdminCoupons />} />
             </Route>
 
             {/* Fallback */}

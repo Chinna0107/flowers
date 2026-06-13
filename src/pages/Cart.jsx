@@ -11,7 +11,7 @@ export default function Cart() {
   const navigate = useNavigate();
 
   const subtotal = useMemo(() => cart.reduce((sum, item) => sum + item.price * item.quantity, 0), [cart]);
-  const shipping = subtotal > 0 && subtotal < 1000 ? 50 : 0;
+  const shipping = 0;
   const tax = Math.round(subtotal * 0.05); // 5% tax
   const total = subtotal + shipping + tax;
 

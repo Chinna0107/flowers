@@ -1,5 +1,6 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../store/authStore";
+import logo from "../assets/logo.jpeg";
 
 const NAV = [
   { to: '/admin/dashboard', label: 'Dashboard', icon: '▦' },
@@ -7,6 +8,7 @@ const NAV = [
   { to: '/admin/orders', label: 'Orders', icon: '📦' },
   { to: '/admin/subscriptions', label: 'Subscriptions', icon: '🔁' },
   { to: '/admin/reports', label: 'Reports', icon: '📊' },
+  { to: '/admin/coupons', label: 'Coupons', icon: '🎟️' },
 ];
 
 const activeStyle = {
@@ -29,13 +31,11 @@ export default function AdminLayout() {
       }}>
         {/* Logo */}
         <div style={{ textAlign: 'center', padding: '0 1.5rem 2rem', borderBottom: '1px solid rgba(201,168,106,0.3)' }}>
-          <div style={{
-            width: 64, height: 64, borderRadius: '50%', border: '2px dashed var(--color-accent)',
-            margin: '0 auto 0.75rem', display: 'flex', flexDirection: 'column',
-            alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(250,247,242,0.1)'
-          }}>
-            <span style={{ fontSize: '1.4rem' }}>✿</span>
-          </div>
+          <img src={logo} alt="Sowgandhika" style={{
+            width: 64, height: 64, borderRadius: '50%',
+            objectFit: 'cover', border: '2px solid var(--color-accent)',
+            margin: '0 auto 0.75rem', display: 'block'
+          }} />
           <h2 style={{ fontFamily: 'var(--font-serif)', color: 'var(--color-accent)', margin: 0, fontSize: '1.2rem' }}>Sowgandhika</h2>
           <p style={{ color: 'rgba(250,247,242,0.6)', fontSize: '0.75rem', margin: '0.25rem 0 0' }}>Admin Panel</p>
         </div>

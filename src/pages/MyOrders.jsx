@@ -21,11 +21,22 @@ export default function MyOrders() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!token) { navigate('/auth'); return; }
-    fetch(`${API}/orders/my`, { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => r.json())
-      .then(d => setOrders(Array.isArray(d) ? d : []))
-      .finally(() => setLoading(false));
+    const storedAuth = localStorage.getItem('auth');
+    const activeToken = token || (storedAuth ? JSON.parse(storedAuth)?.token : null);
+    if (activeToken) {
+      fetch(`${API}/orders/my`, { headers: { Authorization: `Bearer ${activeToken}` } })
+        .then(r => r.json())
+        .then(d => setOrders(Array.isArray(d) ? d : []))
+        .finally(() => setLoading(false));
+    } else {
+      const timer = setTimeout(() => {
+        const recheckAuth = localStorage.getItem('auth');
+        if (!token && !recheckAuth) {
+          navigate('/auth');
+        }
+      }, 500);
+      return () => clearTimeout(timer);
+    }
   }, [token]);
 
   return (

@@ -4,8 +4,14 @@ import { Repeat, Flower2 } from "lucide-react";
 import { useAuth } from "../store/authStore";
 import { useNavigate } from "react-router-dom";
 import { API } from "../config/api";
+import Swal from "sweetalert2";
 
-const STATUS_C = { Active: { bg: 'rgba(46,74,46,0.1)', color: '#2E4A2E', border: 'rgba(46,74,46,0.3)' }, Paused: { bg: 'rgba(201,168,106,0.15)', color: '#b58b3c', border: 'rgba(201,168,106,0.5)' }, Cancelled: { bg: 'rgba(0,0,0,0.05)', color: '#666', border: 'rgba(0,0,0,0.1)' } };
+const STATUS_C = { 
+  Active: { bg: 'rgba(46,74,46,0.1)', color: '#2E4A2E', border: 'rgba(46,74,46,0.3)' }, 
+  Paused: { bg: 'rgba(201,168,106,0.15)', color: '#b58b3c', border: 'rgba(201,168,106,0.5)' }, 
+  Cancelled: { bg: 'rgba(0,0,0,0.05)', color: '#666', border: 'rgba(0,0,0,0.1)' },
+  Inactive: { bg: 'rgba(220,38,38,0.05)', color: '#dc2626', border: 'rgba(220,38,38,0.1)' }
+};
 
 export default function MySubscriptions() {
   const { token } = useAuth();
@@ -14,8 +20,10 @@ export default function MySubscriptions() {
   const [loading, setLoading] = useState(true);
 
   const load = () => {
-    if (!token) { navigate('/auth'); return; }
-    fetch(`${API}/subscriptions/my`, { headers: { Authorization: `Bearer ${token}` } })
+    const storedAuth = localStorage.getItem('auth');
+    const activeToken = token || (storedAuth ? JSON.parse(storedAuth)?.token : null);
+    if (!activeToken) { navigate('/auth'); return; }
+    fetch(`${API}/subscriptions/my`, { headers: { Authorization: `Bearer ${activeToken}` } })
       .then(r => r.json())
       .then(d => setSubs(Array.isArray(d) ? d : []))
       .finally(() => setLoading(false));
@@ -26,7 +34,8 @@ export default function MySubscriptions() {
     return new Date(dateStr).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
   };
 
-  const isSubscriptionExpired = (endDateStr) => {
+  const isSubscriptionExpired = (endDateStr, status) => {
+    if (status === 'Paused') return false;
     if (!endDateStr) return false;
     const endDate = new Date(endDateStr);
     endDate.setHours(23, 59, 59, 999);
@@ -52,8 +61,8 @@ export default function MySubscriptions() {
   const handlePrintSubscription = (sub) => {
     const printWindow = window.open('', '_blank', 'width=800,height=600');
     
-    const expired = isSubscriptionExpired(sub.end_date);
-    const nextDelivery = expired ? 'Expired' : formatDate(getNextDeliveryDate(sub.schedule));
+    const expired = isSubscriptionExpired(sub.end_date, sub.status);
+    const nextDelivery = sub.status === 'Paused' ? 'Paused' : expired ? 'Expired' : formatDate(sub.next_delivery);
     
     const html = `
       <html>
@@ -68,6 +77,7 @@ export default function MySubscriptions() {
             .section-title { font-size: 14px; text-transform: uppercase; color: #C9A86A; letter-spacing: 1px; margin-bottom: 10px; font-weight: bold; border-bottom: 1px solid #eee; padding-bottom: 5px; }
             .badge { padding: 3px 8px; border-radius: 3px; font-size: 12px; font-weight: bold; }
             .badge-active { background: #e2f0d9; color: #385723; }
+            .badge-paused { background: #fff2cc; color: #b58b3c; }
             .badge-expired { background: #fce4d6; color: #c65911; }
             @media print {
               body { margin: 0; }
@@ -95,7 +105,7 @@ export default function MySubscriptions() {
               <strong>Start Date:</strong> ${formatDate(sub.start_date)}<br>
               <strong>End Date:</strong> ${formatDate(sub.end_date)}<br>
               <strong>Next Delivery:</strong> ${nextDelivery}<br>
-              <strong>Status:</strong> <span class="badge ${expired ? 'badge-expired' : 'badge-active'}">${expired ? 'EXPIRED' : (sub.status || 'ACTIVE')}</span>
+              <strong>Status:</strong> <span class="badge ${sub.status === 'Paused' ? 'badge-paused' : (expired ? 'badge-expired' : 'badge-active')}">${expired ? 'EXPIRED' : (sub.status || 'ACTIVE').toUpperCase()}</span>
             </div>
           </div>
 
@@ -126,12 +136,195 @@ export default function MySubscriptions() {
     printWindow.document.close();
   };
 
-  useEffect(() => { load(); }, [token]);
+  useEffect(() => { 
+    const storedAuth = localStorage.getItem('auth');
+    const activeToken = token || (storedAuth ? JSON.parse(storedAuth)?.token : null);
+    if (activeToken) {
+      load(); 
+    } else {
+      // Small timeout to allow auth provider to initialize if refreshing
+      const timer = setTimeout(() => {
+        const recheckAuth = localStorage.getItem('auth');
+        if (!token && !recheckAuth) {
+          navigate('/auth');
+        }
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [token]);
 
   const cancel = async (id) => {
-    if (!confirm('Cancel this subscription?')) return;
-    await fetch(`${API}/subscriptions/${id}/cancel`, { method: 'PUT', headers: { Authorization: `Bearer ${token}` } });
-    load();
+    const storedAuth = localStorage.getItem('auth');
+    const activeToken = token || (storedAuth ? JSON.parse(storedAuth)?.token : null);
+    if (!activeToken) return;
+
+    const result = await Swal.fire({
+      title: 'Cancel Subscription?',
+      text: 'Are you sure you want to cancel this subscription? You will stop receiving daily flower deliveries.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#dc2626',
+      cancelButtonColor: '#666',
+      confirmButtonText: 'Yes, Cancel it!',
+      cancelButtonText: 'No, Keep it',
+      background: 'var(--color-bg, #FAF7F2)',
+      color: 'var(--color-primary, #2E4A2E)'
+    });
+
+    if (result.isConfirmed) {
+      try {
+        const res = await fetch(`${API}/subscriptions/${id}/cancel`, { 
+          method: 'PUT', 
+          headers: { Authorization: `Bearer ${activeToken}` } 
+        });
+        if (res.ok) {
+          Swal.fire({
+            title: 'Cancelled!',
+            text: 'Your subscription status is now Cancelled.',
+            icon: 'success',
+            confirmButtonColor: 'var(--color-primary, #2E4A2E)',
+            background: 'var(--color-bg, #FAF7F2)',
+            color: 'var(--color-primary, #2E4A2E)'
+          });
+          load();
+        } else {
+          const errData = await res.json();
+          Swal.fire({
+            title: 'Error',
+            text: errData.error || 'Failed to cancel subscription.',
+            icon: 'error',
+            confirmButtonColor: 'var(--color-primary, #2E4A2E)',
+            background: 'var(--color-bg, #FAF7F2)',
+            color: 'var(--color-primary, #2E4A2E)'
+          });
+        }
+      } catch (err) {
+        Swal.fire({
+          title: 'Error',
+          text: 'An error occurred. Please try again.',
+          icon: 'error',
+          confirmButtonColor: 'var(--color-primary, #2E4A2E)',
+          background: 'var(--color-bg, #FAF7F2)',
+          color: 'var(--color-primary, #2E4A2E)'
+        });
+      }
+    }
+  };
+
+  const pause = async (id) => {
+    const storedAuth = localStorage.getItem('auth');
+    const activeToken = token || (storedAuth ? JSON.parse(storedAuth)?.token : null);
+    if (!activeToken) return;
+
+    const result = await Swal.fire({
+      title: 'Pause Subscription?',
+      text: 'Deliveries will be suspended temporarily. You can resume them anytime.',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: 'var(--color-accent, #C9A86A)',
+      cancelButtonColor: '#666',
+      confirmButtonText: 'Yes, Pause it!',
+      cancelButtonText: 'No, Keep active',
+      background: 'var(--color-bg, #FAF7F2)',
+      color: 'var(--color-primary, #2E4A2E)'
+    });
+
+    if (result.isConfirmed) {
+      try {
+        const res = await fetch(`${API}/subscriptions/${id}/pause`, { 
+          method: 'PUT', 
+          headers: { Authorization: `Bearer ${activeToken}` } 
+        });
+        if (res.ok) {
+          Swal.fire({
+            title: 'Paused!',
+            text: 'Your subscription has been paused.',
+            icon: 'success',
+            confirmButtonColor: 'var(--color-primary, #2E4A2E)',
+            background: 'var(--color-bg, #FAF7F2)',
+            color: 'var(--color-primary, #2E4A2E)'
+          });
+          load();
+        } else {
+          const errData = await res.json();
+          Swal.fire({
+            title: 'Error',
+            text: errData.error || 'Failed to pause subscription.',
+            icon: 'error',
+            confirmButtonColor: 'var(--color-primary, #2E4A2E)',
+            background: 'var(--color-bg, #FAF7F2)',
+            color: 'var(--color-primary, #2E4A2E)'
+          });
+        }
+      } catch (err) {
+        Swal.fire({
+          title: 'Error',
+          text: 'An error occurred. Please try again.',
+          icon: 'error',
+          confirmButtonColor: 'var(--color-primary, #2E4A2E)',
+          background: 'var(--color-bg, #FAF7F2)',
+          color: 'var(--color-primary, #2E4A2E)'
+        });
+      }
+    }
+  };
+
+  const resume = async (id) => {
+    const storedAuth = localStorage.getItem('auth');
+    const activeToken = token || (storedAuth ? JSON.parse(storedAuth)?.token : null);
+    if (!activeToken) return;
+
+    const result = await Swal.fire({
+      title: 'Resume Subscription?',
+      text: 'Deliveries will start again from tomorrow.',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: 'var(--color-primary, #2E4A2E)',
+      cancelButtonColor: '#666',
+      confirmButtonText: 'Yes, Resume it!',
+      cancelButtonText: 'Cancel',
+      background: 'var(--color-bg, #FAF7F2)',
+      color: 'var(--color-primary, #2E4A2E)'
+    });
+
+    if (result.isConfirmed) {
+      try {
+        const res = await fetch(`${API}/subscriptions/${id}/resume`, { 
+          method: 'PUT', 
+          headers: { Authorization: `Bearer ${activeToken}` } 
+        });
+        if (res.ok) {
+          Swal.fire({
+            title: 'Resumed!',
+            text: 'Your subscription has been resumed.',
+            icon: 'success',
+            confirmButtonColor: 'var(--color-primary, #2E4A2E)',
+            background: 'var(--color-bg, #FAF7F2)',
+            color: 'var(--color-primary, #2E4A2E)'
+          });
+          load();
+        } else {
+          const errData = await res.json();
+          Swal.fire({
+            title: 'Error',
+            text: errData.error || 'Failed to resume subscription.',
+            icon: 'error',
+            confirmButtonColor: 'var(--color-primary, #2E4A2E)',
+            background: 'var(--color-bg, #FAF7F2)',
+            color: 'var(--color-primary, #2E4A2E)'
+          });
+        }
+      } catch (err) {
+        Swal.fire({
+          title: 'Error',
+          text: 'An error occurred. Please try again.',
+          icon: 'error',
+          confirmButtonColor: 'var(--color-primary, #2E4A2E)',
+          background: 'var(--color-bg, #FAF7F2)',
+          color: 'var(--color-primary, #2E4A2E)'
+        });
+      }
+    }
   };
 
   return (
@@ -155,6 +348,7 @@ export default function MySubscriptions() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
             {subs.map((s, i) => {
               const sc = STATUS_C[s.status] || STATUS_C.Active;
+              const expired = isSubscriptionExpired(s.end_date, s.status);
               return (
                 <motion.div key={s.id} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }}
                   style={{ background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(10px)', padding: '1.5rem', borderRadius: '16px', border: '1px solid rgba(201,168,106,0.3)', boxShadow: '0 8px 30px rgba(46,74,46,0.04)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
@@ -165,16 +359,24 @@ export default function MySubscriptions() {
                     </div>
                     <p style={{ color: 'var(--color-text-muted)', fontSize: '0.88rem', margin: '0 0 0.25rem' }}>🔁 {s.schedule}</p>
                     <p style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem', margin: 0 }}>
-                      Next Delivery: {isSubscriptionExpired(s.end_date) ? (
+                      Next Delivery: {s.status === 'Paused' ? (
+                        <span style={{ color: 'var(--color-accent)', fontWeight: 600 }}>Paused</span>
+                      ) : expired ? (
                         <span style={{ color: '#dc2626', fontWeight: 600 }}>Expired</span>
                       ) : (
-                        formatDate(getNextDeliveryDate(s.schedule))
+                        formatDate(s.next_delivery)
                       )}
                     </p>
                   </div>
                   <div style={{ display: 'flex', gap: '0.5rem' }}>
                     <button onClick={() => handlePrintSubscription(s)} style={{ background: 'none', border: '1px solid var(--color-primary)', color: 'var(--color-primary)', padding: '0.4rem 1rem', borderRadius: 'var(--radius-md)', cursor: 'pointer', fontFamily: 'var(--font-primary)', fontSize: '0.85rem' }}>Print</button>
-                    {s.status !== 'Cancelled' && !isSubscriptionExpired(s.end_date) && (
+                    {s.status === 'Active' && !expired && (
+                      <button onClick={() => pause(s.id)} style={{ background: 'none', border: '1px solid var(--color-accent)', color: 'var(--color-accent)', padding: '0.4rem 1rem', borderRadius: 'var(--radius-md)', cursor: 'pointer', fontFamily: 'var(--font-primary)', fontSize: '0.85rem' }}>Pause</button>
+                    )}
+                    {s.status === 'Paused' && !expired && (
+                      <button onClick={() => resume(s.id)} style={{ background: 'var(--color-accent)', border: '1px solid var(--color-accent)', color: 'white', padding: '0.4rem 1rem', borderRadius: 'var(--radius-md)', cursor: 'pointer', fontFamily: 'var(--font-primary)', fontSize: '0.85rem', fontWeight: 600 }}>Resume</button>
+                    )}
+                    {s.status !== 'Cancelled' && s.status !== 'Inactive' && !expired && (
                       <button onClick={() => cancel(s.id)} style={{ background: 'none', border: '1px solid #dc2626', color: '#dc2626', padding: '0.4rem 1rem', borderRadius: 'var(--radius-md)', cursor: 'pointer', fontFamily: 'var(--font-primary)', fontSize: '0.85rem' }}>Cancel</button>
                     )}
                   </div>
