@@ -6,6 +6,8 @@ import { useAuth } from "../store/authStore";
 import { API } from "../config/api";
 import { Calendar, Repeat, Flower2, Zap, ArrowLeft, ShieldCheck, MapPin } from "lucide-react";
 import Swal from "sweetalert2";
+import "./Subscriptions.css";
+
 
 const PLANS = [
   { id: 'monthly', label: 'Monthly', icon: <Calendar size={24} />, desc: 'Delivery every 30 days', days: 30 },
@@ -243,52 +245,52 @@ export default function Subscriptions() {
   const totalPrice = calculatePrice();
 
   return (
-    <div style={{ maxWidth: 860, margin: '0 auto', padding: '4rem 1.5rem', minHeight: '80vh' }}>
+    <div className="subscriptions-container">
       <Helmet>
         <title>Flower Subscriptions | Sowgandhika Flowers</title>
         <meta name="description" content="Subscribe to daily, weekly or alternate-day fresh flower deliveries in Hyderabad. Perfect for morning Pooja rituals or bringing fresh blooms into your home." />
         <link rel="canonical" href="https://sowgandhikafreshflowers.com/subscriptions" />
       </Helmet>
       
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} style={{ textAlign: 'center', marginBottom: '3.5rem' }}>
-        <div style={{ width: 80, height: 80, borderRadius: '50%', border: '2px dashed var(--color-accent)', margin: '0 auto 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--color-bg)' }}>
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="subscriptions-hero">
+        <div className="hero-icon-container">
           <Flower2 size={32} color="var(--color-accent)" />
         </div>
-        <h1 style={{ fontFamily: 'Playfair Display, serif', color: 'var(--color-primary)', fontSize: '3rem', marginBottom: '0.5rem' }}>Subscriptions</h1>
-        <p style={{ color: 'var(--color-text-muted)', fontSize: '1.1rem', fontStyle: 'italic' }}>Fresh flowers on your schedule. Pay with Razorpay.</p>
+        <h1 className="subscriptions-title">Subscriptions</h1>
+        <p className="subscriptions-subtitle">Fresh flowers on your schedule. Pay with Razorpay.</p>
       </motion.div>
 
       <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1 }}
-        style={{ background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(16px)', border: '1px solid rgba(201,168,106,0.3)', borderRadius: '24px', padding: '3rem', boxShadow: '0 16px 40px rgba(46,74,46,0.06)' }}>
+        className="subscription-card">
 
         <AnimatePresence mode="wait">
           {step === "configure" ? (
             <motion.div key="configure" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }}>
               {/* Product Select */}
               <div style={{ marginBottom: '2.5rem' }}>
-                <label style={{ display: 'block', fontFamily: 'Playfair Display, serif', fontSize: '1.2rem', color: 'var(--color-primary)', marginBottom: '0.75rem', fontWeight: 600 }}>Choose Your Flower</label>
-                <div style={{ position: 'relative' }}>
+                <label className="subscription-label">Choose Your Flower</label>
+                <div className="select-wrapper">
                   <select value={product ? product.id : ''} onChange={e => setProduct(products.find(p => p.id === parseInt(e.target.value)))}
-                    style={{ width: '100%', padding: '1rem 1.5rem', border: '1px solid rgba(201,168,106,0.5)', borderRadius: '12px', fontFamily: 'Lato, sans-serif', fontSize: '1.1rem', backgroundColor: '#fff', color: 'var(--color-text)', cursor: 'pointer', outline: 'none', appearance: 'none' }}>
+                    className="subscription-select">
                     {products.map(p => (
                       <option key={p.id} value={p.id}>{p.name} - ₹{p.price_per_unit}/day</option>
                     ))}
                   </select>
-                  <div style={{ position: 'absolute', right: '1.5rem', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: 'var(--color-accent)' }}>▼</div>
+                  <div className="select-wrapper-arrow">▼</div>
                 </div>
               </div>
 
               {/* Plans */}
-              <p style={{ fontFamily: 'Playfair Display, serif', fontSize: '1.2rem', color: 'var(--color-primary)', fontWeight: 600, marginBottom: '1rem' }}>Choose Your Schedule</p>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
+              <p className="subscription-label" style={{ marginBottom: '1rem' }}>Choose Your Schedule</p>
+              <div className="plans-grid">
                 {PLANS.map(p => (
                   <motion.button whileHover={{ y: -2 }} whileTap={{ scale: 0.98 }} key={p.id} onClick={() => setSchedule(p.id)}
-                    style={{ padding: '1.5rem 1rem', border: `2px solid ${schedule === p.id ? 'var(--color-primary)' : 'rgba(201,168,106,0.3)'}`, borderRadius: '16px', cursor: 'pointer', textAlign: 'center', backgroundColor: schedule === p.id ? 'var(--color-primary)' : '#fff', color: schedule === p.id ? '#FAF7F2' : 'var(--color-primary)', transition: 'all 0.3s', boxShadow: schedule === p.id ? '0 8px 24px rgba(46,74,46,0.2)' : 'none' }}>
-                    <div style={{ marginBottom: '1rem', color: schedule === p.id ? 'var(--color-accent)' : 'var(--color-primary)' }}>{p.icon}</div>
-                    <div style={{ fontFamily: 'Playfair Display, serif', fontWeight: 700, fontSize: '1.1rem', marginBottom: '0.5rem' }}>{p.label}</div>
-                    <div style={{ fontSize: '0.85rem', opacity: 0.8, lineHeight: 1.4 }}>{p.desc}</div>
+                    className={`plan-button ${schedule === p.id ? 'selected' : ''}`}>
+                    <div className="plan-icon">{p.icon}</div>
+                    <div className="plan-title">{p.label}</div>
+                    <div className="plan-desc">{p.desc}</div>
                     {!p.custom && product && (
-                      <div style={{ marginTop: '0.75rem', fontSize: '1.1rem', fontWeight: 700 }}>
+                      <div className="plan-price">
                         ₹{product.price_per_unit * p.days}
                       </div>
                     )}
@@ -297,13 +299,13 @@ export default function Subscriptions() {
               </div>
 
               {schedule === 'n_days' && (
-                <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} style={{ marginBottom: '2rem', padding: '2rem', backgroundColor: '#fff', border: '1px dashed var(--color-accent)', borderRadius: '16px', textAlign: 'center' }}>
-                  <label style={{ display: 'block', fontFamily: 'Playfair Display, serif', fontSize: '1.2rem', color: 'var(--color-primary)', marginBottom: '1rem', fontWeight: 600 }}>How many days?</label>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem', marginBottom: '1rem' }}>
-                    <button onClick={() => setNDays(Math.max(1, nDays - 1))} style={{ width: 44, height: 44, borderRadius: '50%', border: '1px solid var(--color-accent)', background: '#fff', color: 'var(--color-primary)', cursor: 'pointer', fontSize: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>−</button>
+                <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} className="custom-days-wrapper">
+                  <label className="subscription-label" style={{ marginBottom: '1rem' }}>How many days?</label>
+                  <div className="custom-days-controls">
+                    <button onClick={() => setNDays(Math.max(1, nDays - 1))} className="btn-counter">−</button>
                     <input type="number" min="1" max="90" value={nDays} onChange={e => setNDays(Math.min(90, Math.max(1, +e.target.value)))}
-                      style={{ width: 90, padding: '0.75rem', textAlign: 'center', border: '2px solid var(--color-primary)', borderRadius: '12px', fontFamily: 'Lato, sans-serif', fontSize: '1.5rem', fontWeight: 700, outline: 'none' }} />
-                    <button onClick={() => setNDays(Math.min(90, nDays + 1))} style={{ width: 44, height: 44, borderRadius: '50%', border: '1px solid var(--color-accent)', background: '#fff', color: 'var(--color-primary)', cursor: 'pointer', fontSize: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
+                      className="input-counter" />
+                    <button onClick={() => setNDays(Math.min(90, nDays + 1))} className="btn-counter">+</button>
                   </div>
                   {product && (
                     <div style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--color-accent)' }}>
@@ -342,15 +344,15 @@ export default function Subscriptions() {
             </motion.div>
           ) : (
             <motion.div key="address" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }}>
-              <button onClick={() => setStep("configure")} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'none', border: 'none', color: 'var(--color-accent)', cursor: 'pointer', fontFamily: 'Playfair Display, serif', fontSize: '1.1rem', fontWeight: 600, marginBottom: '2.0rem', padding: 0 }}>
+              <button onClick={() => setStep("configure")} className="back-config-btn">
                 <ArrowLeft size={18} /> Back to Configuration
               </button>
 
-              <h2 style={{ fontFamily: 'Playfair Display, serif', color: 'var(--color-primary)', fontSize: '1.6rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <h2 className="step-title">
                 <MapPin size={24} color="var(--color-accent)" /> Delivery Address Details
               </h2>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '2.5rem', textAlign: 'left' }}>
+              <div className="address-grid">
                 {[
                   ['name', 'Full Name', 'text'],
                   ['flat', 'Flat / Door No', 'text'],
@@ -359,20 +361,20 @@ export default function Subscriptions() {
                   ['pincode', 'Pincode', 'text'],
                   ['phone', 'Phone Number', 'tel']
                 ].map(([k, l, t]) => (
-                  <div key={k} style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', gridColumn: k === 'street' ? 'span 2' : 'auto' }}>
-                    <label style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--color-primary)' }}>{l} *</label>
+                  <div key={k} className={`input-group ${k === 'street' ? 'span-2' : ''}`}>
+                    <label className="input-label">{l} *</label>
                     <input 
                       type={t} 
                       placeholder={l} 
                       value={address[k]} 
                       onChange={setAddr(k)} 
-                      style={{ padding: '0.8rem 1rem', border: '1px solid rgba(201,168,106,0.5)', borderRadius: '8px', fontFamily: 'Lato, sans-serif', outline: 'none', fontSize: '1.0rem' }} 
+                      className="address-input" 
                     />
                   </div>
                 ))}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-                  <label style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--color-primary)' }}>City</label>
-                  <input type="text" value="Hyderabad" readOnly style={{ padding: '0.8rem 1rem', border: '1px solid rgba(201,168,106,0.3)', borderRadius: '8px', fontFamily: 'Lato, sans-serif', fontSize: '1.0rem', background: 'rgba(0,0,0,0.03)', color: 'var(--color-text-muted)' }} />
+                <div className="input-group">
+                  <label className="input-label">City</label>
+                  <input type="text" value="Hyderabad" readOnly className="address-input" />
                 </div>
               </div>
 

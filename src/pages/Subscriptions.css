@@ -1,0 +1,379 @@
+/* ── SUBSCRIPTIONS PAGE ─────────────────────────────────────────────── */
+.subscriptions-container {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 4rem 1.5rem;
+  min-height: 80vh;
+}
+
+.subscriptions-hero {
+  text-align: center;
+  margin-bottom: 3.5rem;
+}
+
+.hero-icon-container {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: 2px dashed var(--color-accent);
+  margin: 0 auto 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--color-bg);
+}
+
+.subscriptions-title {
+  font-family: 'Playfair Display', serif;
+  color: var(--color-primary);
+  font-size: 3rem;
+  margin-bottom: 0.5rem;
+}
+
+.subscriptions-subtitle {
+  color: var(--color-text-muted);
+  font-size: 1.1rem;
+  font-style: italic;
+}
+
+/* ── MAIN CARD ─────────────────────────────────────────────────────── */
+.subscription-card {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(201, 168, 106, 0.3);
+  border-radius: 24px;
+  padding: 3rem;
+  box-shadow: 0 16px 40px rgba(46, 74, 46, 0.06);
+}
+
+.subscription-label {
+  display: block;
+  font-family: 'Playfair Display', serif;
+  font-size: 1.2rem;
+  color: var(--color-primary);
+  margin-bottom: 0.75rem;
+  font-weight: 600;
+}
+
+.select-wrapper {
+  position: relative;
+}
+
+.select-wrapper-arrow {
+  position: absolute;
+  right: 1.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: var(--color-accent);
+}
+
+.subscription-select {
+  width: 100%;
+  padding: 1rem 1.5rem;
+  border: 1px solid rgba(201, 168, 106, 0.5);
+  border-radius: 12px;
+  font-family: 'Lato', sans-serif;
+  font-size: 1.1rem;
+  background-color: #fff;
+  color: var(--color-text);
+  cursor: pointer;
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  transition: all 0.25s;
+}
+
+.subscription-select:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 4px rgba(46, 74, 46, 0.08);
+}
+
+/* ── PLANS GRID ────────────────────────────────────────────────────── */
+.plans-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.plan-button {
+  padding: 1.5rem 1rem;
+  border: 2px solid rgba(201, 168, 106, 0.3);
+  border-radius: 16px;
+  cursor: pointer;
+  text-align: center;
+  background-color: #fff;
+  color: var(--color-primary);
+  transition: all 0.3s;
+  box-sizing: border-box;
+}
+
+.plan-button:hover {
+  transform: translateY(-2px);
+  border-color: var(--color-accent);
+}
+
+.plan-button.selected {
+  border-color: var(--color-primary);
+  background-color: var(--color-primary);
+  color: #FAF7F2;
+  box-shadow: 0 8px 24px rgba(46, 74, 46, 0.2);
+}
+
+.plan-icon {
+  margin-bottom: 1rem;
+  transition: color 0.3s;
+  color: var(--color-primary);
+}
+
+.plan-button.selected .plan-icon {
+  color: var(--color-accent);
+}
+
+.plan-title {
+  font-family: 'Playfair Display', serif;
+  font-weight: 700;
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+}
+
+.plan-desc {
+  font-size: 0.85rem;
+  opacity: 0.8;
+  line-height: 1.4;
+}
+
+.plan-price {
+  margin-top: 0.75rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+/* ── CUSTOM DAYS ───────────────────────────────────────────────────── */
+.custom-days-wrapper {
+  margin-bottom: 2rem;
+  padding: 2rem;
+  background-color: #fff;
+  border: 1px dashed var(--color-accent);
+  border-radius: 16px;
+  text-align: center;
+}
+
+.custom-days-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.btn-counter {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid var(--color-accent);
+  background: #fff;
+  color: var(--color-primary);
+  cursor: pointer;
+  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.btn-counter:hover {
+  background: var(--color-bg);
+  border-color: var(--color-primary);
+}
+
+.input-counter {
+  width: 90px;
+  padding: 0.75rem;
+  text-align: center;
+  border: 2px solid var(--color-primary);
+  border-radius: 12px;
+  font-family: 'Lato', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  outline: none;
+}
+
+/* ── ADDRESS STEP ──────────────────────────────────────────────────── */
+.back-config-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: none;
+  border: none;
+  color: var(--color-accent);
+  cursor: pointer;
+  font-family: 'Playfair Display', serif;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 2rem;
+  padding: 0;
+  transition: color 0.25s;
+}
+
+.back-config-btn:hover {
+  color: var(--color-primary);
+}
+
+.step-title {
+  font-family: 'Playfair Display', serif;
+  color: var(--color-primary);
+  font-size: 1.6rem;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.address-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 2.5rem;
+  text-align: left;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.input-group.span-2 {
+  grid-column: span 2;
+}
+
+.input-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+.address-input {
+  padding: 0.8rem 1rem;
+  border: 1px solid rgba(201, 168, 106, 0.5);
+  border-radius: 8px;
+  font-family: 'Lato', sans-serif;
+  outline: none;
+  font-size: 1rem;
+  background-color: #fff;
+  color: var(--color-text);
+  transition: all 0.25s;
+}
+
+.address-input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 4px rgba(46, 74, 46, 0.08);
+}
+
+.address-input[readonly] {
+  border: 1px solid rgba(201, 168, 106, 0.3);
+  background: rgba(0, 0, 0, 0.03);
+  color: var(--color-text-muted);
+  cursor: not-allowed;
+}
+
+/* ── RESPONSIVE MEDIA QUERIES ────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .subscriptions-container {
+    padding: 2.5rem 1.25rem;
+  }
+
+  .subscriptions-title {
+    font-size: 2.25rem;
+  }
+
+  .subscription-card {
+    padding: 2rem 1.5rem;
+    border-radius: 20px;
+  }
+
+  .plans-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+
+  .plan-button {
+    padding: 1.25rem 0.75rem;
+    border-radius: 12px;
+  }
+
+  .plan-title {
+    font-size: 1rem;
+  }
+
+  .plan-desc {
+    font-size: 0.78rem;
+  }
+
+  .address-grid {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+
+  .input-group.span-2 {
+    grid-column: span 1;
+  }
+}
+
+@media (max-width: 480px) {
+  .subscriptions-container {
+    padding: 1.5rem 1rem;
+  }
+
+  .subscriptions-hero {
+    margin-bottom: 2.5rem;
+  }
+
+  .subscriptions-title {
+    font-size: 1.85rem;
+  }
+
+  .subscription-card {
+    padding: 1.5rem 1rem;
+    border-radius: 16px;
+  }
+
+  .plans-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+  }
+
+  .plan-button {
+    padding: 1rem 0.5rem;
+  }
+
+  .plan-icon svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .custom-days-wrapper {
+    padding: 1.25rem;
+    border-radius: 12px;
+  }
+
+  .custom-days-controls {
+    gap: 0.75rem;
+  }
+
+  .btn-counter {
+    width: 38px;
+    height: 38px;
+    font-size: 1.25rem;
+  }
+
+  .input-counter {
+    width: 70px;
+    padding: 0.5rem;
+    font-size: 1.25rem;
+  }
+}
