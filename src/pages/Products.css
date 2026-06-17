@@ -338,6 +338,8 @@
   position: relative;
   padding-top: 85%;
   overflow: hidden;
+  margin: 12px 12px 0;
+  border-radius: 8px;
 }
 
 .pc-img {

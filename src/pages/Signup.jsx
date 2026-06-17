@@ -2,10 +2,11 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../store/authStore";
 import FadeIn from "../components/FadeIn";
+import { BUILDINGS, PINCODES } from "../data/addressOptions.js";
 
 export default function Signup() {
   const [step, setStep] = useState(1);
-  const [form, setForm] = useState({ email: "", otp: "", name: "", password: "", phone: "", address: "" });
+  const [form, setForm] = useState({ email: "", otp: "", name: "", password: "", phone: "", address: "", flat: "", building: "", pincode: "" });
   const [otpToken, setOtpToken] = useState("");
   const [setupToken, setSetupToken] = useState("");
   const [error, setError] = useState("");
@@ -41,7 +42,18 @@ export default function Signup() {
         setError(result.error);
       }
     } else if (step === 3) {
-      const result = await completeProfile(setupToken, form.name, form.password, form.phone, form.address);
+      if (!form.flat || !form.building || !form.pincode) {
+        setError("Please enter flat number and select building name & pincode.");
+        setLoading(false);
+        return;
+      }
+      const addressJson = JSON.stringify({
+        flat: form.flat,
+        building: form.building,
+        pincode: form.pincode,
+        city: "Hyderabad"
+      });
+      const result = await completeProfile(setupToken, form.name, form.password, form.phone, addressJson);
       if (result.success) {
         navigate("/", { replace: true });
       } else {
@@ -103,7 +115,15 @@ export default function Signup() {
                 <input style={inp} placeholder="Full Name" value={form.name} onChange={set("name")} required autoFocus />
                 <input style={inp} type="password" placeholder="Create Password" value={form.password} onChange={set("password")} required minLength={6} />
                 <input style={inp} placeholder="Phone Number" value={form.phone} onChange={set("phone")} />
-                <textarea style={{ ...inp, resize: "vertical", minHeight: "80px" }} placeholder="Delivery Address (Flat, Street, City, Pincode)" value={form.address} onChange={set("address")} />
+                <input style={inp} placeholder="Flat / Door No" value={form.flat} onChange={set("flat")} required />
+                <select style={inp} value={form.building} onChange={set("building")} required>
+                  <option value="" disabled>Select Building Name</option>
+                  {BUILDINGS.map(b => <option key={b} value={b}>{b}</option>)}
+                </select>
+                <select style={inp} value={form.pincode} onChange={set("pincode")} required>
+                  <option value="" disabled>Select Pincode</option>
+                  {PINCODES.map(p => <option key={p} value={p}>{p}</option>)}
+                </select>
               </>
             )}
 

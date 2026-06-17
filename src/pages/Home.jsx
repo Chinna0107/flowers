@@ -13,12 +13,14 @@ function PopularCard({ p }) {
   const navigate = useNavigate();
   const { addToCart } = useCart();
   const { user } = useAuth();
+
+  const isPooja = p.category === 'pooja-basic' || p.category === 'pooja-premium';
+  const isFresh = p.category === 'fresh';
+  const showBuyOnce = !isPooja;          // Pooja = no "buy once"
+  const showSubscribe = isPooja || isFresh; // Pooja + Fresh = subscribe
   
   const handleBuy = () => {
-    if (!user) {
-      navigate('/signin');
-      return;
-    }
+    if (!user) { navigate('/signin'); return; }
     addToCart({
       id: p.id,
       name: p.name,
@@ -27,7 +29,8 @@ function PopularCard({ p }) {
       img: p.img,
       cat: p.category,
       desc: p.description,
-      tag: p.tag
+      tag: p.tag,
+      unitQuantity: p.quantity || ''
     });
     setAdded(true); 
     setTimeout(() => setAdded(false), 1600); 
@@ -48,16 +51,41 @@ function PopularCard({ p }) {
             <h3 className="product-name">{p.name}</h3>
           </Link>
           <div className="product-price-row">
-            <span className="product-price">₹{p.our_price}</span>
+            <span className="product-price">
+              ₹{p.our_price}
+              {p.quantity && (
+                <span style={{ fontSize: '0.78rem', color: 'var(--color-text-muted)', fontWeight: 'normal', marginLeft: '4px' }}>
+                  / {p.quantity}
+                </span>
+              )}
+            </span>
             {p.mrp && <span className="product-original">₹{p.mrp}</span>}
           </div>
         </div>
       </div>
-      <div className="product-actions">
-        <button className={`pa-buy${added ? " pa-added" : ""}`} onClick={handleBuy}>
-          {added ? "✓ Added" : "Buy Once"}
-        </button>
-        <button className="pa-sub" onClick={() => navigate("/subscriptions")}>🔁 Subscribe</button>
+      <div className={`product-actions${(!showBuyOnce || !showSubscribe) ? ' single-action' : ''}`}
+           style={(!showBuyOnce || !showSubscribe) ? { display: 'block' } : {}}>
+        {showBuyOnce && (
+          <button
+            className={`pa-buy${added ? ' pa-added' : ''}`}
+            onClick={handleBuy}
+            style={!showSubscribe ? { width: '100%' } : {}}
+          >
+            {added ? '✓ Added' : 'Buy Once'}
+          </button>
+        )}
+        {showSubscribe && (
+          <button
+            className="pa-sub"
+            onClick={() => navigate('/subscriptions', { state: { preSelectedProduct: p } })}
+            style={{
+              width: !showBuyOnce ? '100%' : 'auto',
+              ...(!showBuyOnce ? { background: 'var(--color-primary)', color: '#FAF7F2', borderColor: 'var(--color-primary)' } : {})
+            }}
+          >
+            🔁 Subscribe
+          </button>
+        )}
       </div>
     </div>
   );
@@ -96,11 +124,11 @@ export default function Home() {
       <div className="hero-banner">
         <div className="hero-overlay" />
         <div className="hero-content">
-          <h1 className="hero-title">Sowgandhika</h1>
-          <p className="hero-sub">Fresh Daily · Est. 2026</p>
+          {/* <h1 className="hero-title">Sowgandhika</h1> */}
+          {/* <p className="hero-sub">Fresh Daily · Est. 2026</p> */}
           <div className="hero-ctas">
-            <Link to="/products" className="btn-primary hero-btn">Shop Now</Link>
-            <Link to="/subscriptions" className="btn-outline hero-btn hero-btn-outline">Subscribe</Link>
+            {/* <Link to="/products" className="btn-primary hero-btn">Shop Now</Link> */}
+            {/* <Link to="/subscriptions" className="btn-outline hero-btn hero-btn-outline">Subscribe</Link> */}
           </div>
         </div>
       </div>

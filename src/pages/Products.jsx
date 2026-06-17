@@ -3,11 +3,11 @@ import { useNavigate, useLocation, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useCart } from "../store/cartStore.jsx";
 import { useAuth } from "../store/authStore";
-import { CATEGORIES } from "../data/products.js";
+import { CATEGORIES, getProductQuantity } from "../data/products.js";
 import { API } from "../config/api";
 import "./Products.css";
 
-function ProductCard({ p }) {
+function ProductCard({ p, onSubscribe }) {
   const [added, setAdded] = useState(false);
   const navigate = useNavigate();
   const { addToCart } = useCart();
@@ -26,11 +26,17 @@ function ProductCard({ p }) {
       img: p.img,
       cat: p.category,
       desc: p.description,
-      tag: p.tag
+      tag: p.tag,
+      unitQuantity: p.quantity || getProductQuantity(p)
     });
     setAdded(true);
     setTimeout(() => setAdded(false), 1600);
   };
+
+  const isPooja = p.category === 'pooja-basic' || p.category === 'pooja-premium';
+  const isFresh = p.category === 'fresh';
+  const showBuyOnce = !isPooja;
+  const showSubscribe = isPooja || isFresh;
 
   return (
     <div className="pc-card">
@@ -49,18 +55,30 @@ function ProductCard({ p }) {
           </Link>
           <p className="pc-desc">{p.description}</p>
           <div className="pc-price-row">
-            <span className="pc-price">₹{p.our_price}</span>
+            <span className="pc-price">
+              ₹{p.our_price}
+              <span style={{ fontSize: '0.82rem', color: 'var(--color-text-muted)', fontWeight: 'normal', marginLeft: '4px' }}>
+                / {p.quantity || getProductQuantity(p)}
+              </span>
+            </span>
             {p.mrp && <span className="pc-original">₹{p.mrp}</span>}
           </div>
         </div>
       </div>
-      <div className="pc-actions">
-        <button className={`pc-buy${added ? " pc-added" : ""}`} onClick={handleBuy}>
-          {added ? "✓ Added to Cart" : "Add to Cart"}
-        </button>
-        <button className="pc-sub" onClick={() => navigate("/subscriptions")}>
-          🔁 Subscribe
-        </button>
+      <div className={`pc-actions ${(!showBuyOnce || !showSubscribe) ? 'single-action' : ''}`} style={(!showBuyOnce || !showSubscribe) ? { display: 'block' } : {}}>
+        {showBuyOnce && (
+          <button className={`pc-buy${added ? " pc-added" : ""}`} onClick={handleBuy} style={!showSubscribe ? { width: '100%' } : {}}>
+            {added ? "✓ Added to Cart" : "Add to Cart"}
+          </button>
+        )}
+        {showSubscribe && (
+          <button className="pc-sub" onClick={() => navigate("/subscriptions", { state: { preSelectedProduct: p } })} style={{
+            width: !showBuyOnce ? '100%' : 'auto',
+            ...(!showBuyOnce ? { background: 'var(--color-primary)', color: '#FAF7F2', borderColor: 'var(--color-primary)' } : {})
+          }}>
+            🔁 Subscribe
+          </button>
+        )}
       </div>
     </div>
   );

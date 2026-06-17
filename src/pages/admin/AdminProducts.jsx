@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "../../store/authStore";
 import { API } from "../../config/api";
 
-const BLANK = { name: '', category: 'fresh', price_per_unit: '', our_price: '', mrp: '', tag: '', img: '', description: '' };
+const BLANK = { name: '', category: 'fresh', price_per_unit: '', our_price: '', mrp: '', tag: '', img: '', description: '', quantity: '' };
 
 export default function AdminProducts() {
   const { token } = useAuth();
@@ -59,6 +59,7 @@ export default function AdminProducts() {
         price_per_unit: form.price_per_unit ? +form.price_per_unit : null,
         our_price: +form.our_price,
         mrp: form.mrp ? +form.mrp : null,
+        quantity: form.quantity || null
       }),
     });
     setForm(BLANK); setEditing(null); setShowForm(false); setImageFile(null); load();
@@ -74,6 +75,7 @@ export default function AdminProducts() {
       tag: p.tag || '',
       img: p.img || '',
       description: p.description || '',
+      quantity: p.quantity || '',
     });
     setEditing(p.id);
     setShowForm(true);
@@ -172,6 +174,11 @@ export default function AdminProducts() {
                 <label style={{ display: 'block', marginBottom: '0.4rem', fontWeight: 600, color: 'var(--color-primary)', fontSize: '0.85rem' }}>Tag</label>
                 <input style={inp} placeholder="e.g. Best Seller, Premium" value={form.tag} onChange={e => setForm({ ...form, tag: e.target.value })} />
               </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.4rem', fontWeight: 600, color: 'var(--color-primary)', fontSize: '0.85rem' }}>Unit Quantity</label>
+                <input style={inp} placeholder="e.g. 500g, 12 Stems" value={form.quantity} onChange={e => setForm({ ...form, quantity: e.target.value })} />
+              </div>
             </div>
 
             <div style={{ marginBottom: '1.5rem' }}>
@@ -210,7 +217,7 @@ export default function AdminProducts() {
           <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '800px' }}>
             <thead>
               <tr style={{ borderBottom: '2px solid var(--color-accent)' }}>
-                {['Image', 'Name', 'Category', 'Price/Unit', 'Our Price', 'MRP', 'Tag', 'Coupon Eligible', 'Actions'].map(h => (
+                {['Image', 'Name', 'Category', 'Price/Unit', 'Our Price', 'MRP', 'Quantity', 'Tag', 'Coupon Eligible', 'Actions'].map(h => (
                   <th key={h} style={{ textAlign: 'left', padding: '0.75rem', fontFamily: 'var(--font-serif)', color: 'var(--color-primary)', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: 1 }}>{h}</th>
                 ))}
               </tr>
@@ -226,6 +233,7 @@ export default function AdminProducts() {
                   <td style={{ padding: '0.75rem', color: 'var(--color-text)' }}>{p.price_per_unit ? `₹${p.price_per_unit}` : '—'}</td>
                   <td style={{ padding: '0.75rem', color: 'var(--color-accent)', fontWeight: 700 }}>₹{p.our_price}</td>
                   <td style={{ padding: '0.75rem', color: 'var(--color-text-muted)', textDecoration: 'line-through' }}>{p.mrp ? `₹${p.mrp}` : '—'}</td>
+                  <td style={{ padding: '0.75rem', color: 'var(--color-text)' }}>{p.quantity || '—'}</td>
                   <td style={{ padding: '0.75rem' }}>
                     {p.tag && <span style={{ background: 'var(--color-primary)', color: 'var(--color-secondary)', padding: '0.2rem 0.6rem', borderRadius: '12px', fontSize: '0.75rem' }}>{p.tag}</span>}
                   </td>

@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "../store/authStore";
@@ -7,6 +7,7 @@ import { API } from "../config/api";
 import { Calendar, Repeat, Flower2, Zap, ArrowLeft, ShieldCheck, MapPin } from "lucide-react";
 import Swal from "sweetalert2";
 import "./Subscriptions.css";
+import { BUILDINGS, PINCODES } from "../data/addressOptions.js";
 
 
 const PLANS = [
@@ -24,19 +25,39 @@ export default function Subscriptions() {
   const [loading, setLoading] = useState(false);
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [step, setStep] = useState("configure"); // "configure" or "address"
-  const [address, setAddress] = useState({ name: '', flat: '', building: '', street: '', city: 'Hyderabad', pincode: '', phone: '' });
+  const [address, setAddress] = useState({ name: '', flat: '', building: BUILDINGS[0], city: 'Hyderabad', pincode: PINCODES[0], phone: '' });
+  const [timing, setTiming] = useState("6 am - 7:30 am");
   const setAddr = (k) => (e) => setAddress(p => ({ ...p, [k]: e.target.value }));
   
   const { user, token } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  // Track if we already applied the preSelectedProduct from router state
+  const appliedPreselect = useRef(false);
 
   useEffect(() => {
     fetch(`${API}/products`)
       .then(r => r.json())
       .then(data => {
-        const subscriptionProducts = Array.isArray(data) ? data.filter(p => p.price_per_unit) : [];
+        // Show all subscription-eligible products: pooja-basic, pooja-premium, fresh
+        const subscriptionProducts = Array.isArray(data)
+          ? data.filter(p => 
+              p.category === 'pooja-basic' || 
+              p.category === 'pooja-premium' || 
+              p.category === 'fresh' ||
+              p.price_per_unit
+            )
+          : [];
         setProducts(subscriptionProducts);
-        if (subscriptionProducts.length > 0) {
+
+        // Check if a product was passed via router state (clicked Subscribe from product card)
+        const preSelected = location.state?.preSelectedProduct;
+        if (preSelected && !appliedPreselect.current) {
+          appliedPreselect.current = true;
+          // Find the matching product from backend list (for accurate price_per_unit)
+          const match = subscriptionProducts.find(p => p.id === preSelected.id);
+          setProduct(match || preSelected);
+        } else if (!appliedPreselect.current && subscriptionProducts.length > 0) {
           setProduct(subscriptionProducts[0]);
         }
         setLoadingProducts(false);
@@ -55,20 +76,32 @@ export default function Subscriptions() {
         if (data.name) setAddress(p => ({ ...p, name: data.name }));
         if (data.phone) setAddress(p => ({ ...p, phone: data.phone }));
         if (data.address) {
-          // Pre-populate street field if profile has saved address
-          setAddress(p => ({ ...p, street: data.address }));
+          try {
+            const parsed = JSON.parse(data.address);
+            if (parsed && typeof parsed === 'object') {
+              setAddress(p => ({
+                ...p,
+                flat: parsed.flat || '',
+                building: parsed.building || BUILDINGS[0],
+                pincode: parsed.pincode || PINCODES[0]
+              }));
+            }
+          } catch (e) {
+            // legacy address
+          }
         }
       })
       .catch(() => {});
   }, [token]);
 
   const calculatePrice = () => {
-    if (!product || !product.price_per_unit) return 0;
+    if (!product) return 0;
+    const dailyRate = product.price_per_unit || product.our_price || 0;
     const selectedPlan = PLANS.find(p => p.id === schedule);
     if (schedule === 'n_days') {
-      return product.price_per_unit * nDays;
+      return dailyRate * nDays;
     }
-    return product.price_per_unit * selectedPlan.days;
+    return dailyRate * selectedPlan.days;
   };
 
   const loadRazorpayScript = () => {
@@ -95,12 +128,11 @@ export default function Subscriptions() {
 
   const handlePayment = async () => {
     // Validate address fields
-    const requiredFields = ['name', 'flat', 'building', 'street', 'pincode', 'phone'];
+    const requiredFields = ['name', 'flat', 'building', 'pincode', 'phone'];
     const fieldLabels = {
       name: 'Full Name',
       flat: 'Flat / Door No',
       building: 'Building Name',
-      street: 'Street / Area Name',
       pincode: 'Pincode',
       phone: 'Phone Number'
     };
@@ -118,7 +150,7 @@ export default function Subscriptions() {
 
     setLoading(true);
     const totalPrice = calculatePrice();
-    const fullAddress = `${address.name}, ${address.flat}, ${address.building}, ${address.street}, Hyderabad - ${address.pincode} (Tel: ${address.phone})`;
+    const fullAddress = `${address.name}, ${address.flat}, ${address.building}, Hyderabad - ${address.pincode} (Tel: ${address.phone}, Time: ${timing})`;
 
     try {
       // Load Razorpay script
@@ -142,7 +174,7 @@ export default function Subscriptions() {
           product_name: product.name,
           schedule,
           n_days: schedule === 'n_days' ? nDays : undefined,
-          price_per_day: product.price_per_unit,
+          price_per_day: product.price_per_unit || product.our_price,
           total: totalPrice,
           address: fullAddress
         }),
@@ -269,11 +301,36 @@ export default function Subscriptions() {
               {/* Product Select */}
               <div style={{ marginBottom: '2.5rem' }}>
                 <label className="subscription-label">Choose Your Flower</label>
+
+                {/* Pre-selected product banner */}
+                {location.state?.preSelectedProduct && product && product.id === location.state.preSelectedProduct.id && (
+                  <div style={{
+                    display: 'flex', alignItems: 'center', gap: '0.75rem',
+                    background: 'linear-gradient(135deg, rgba(46,74,46,0.08), rgba(201,168,106,0.12))',
+                    border: '1.5px solid var(--color-accent)',
+                    borderRadius: '12px', padding: '0.85rem 1.1rem',
+                    marginBottom: '1rem', fontSize: '0.95rem'
+                  }}>
+                    {product.img && (
+                      <img src={product.img} alt={product.name}
+                        style={{ width: 48, height: 48, objectFit: 'cover', borderRadius: 8, flexShrink: 0 }} />
+                    )}
+                    <div>
+                      <div style={{ fontWeight: 700, color: 'var(--color-primary)', fontFamily: 'Playfair Display, serif' }}>
+                        {product.name}
+                      </div>
+                      <div style={{ color: 'var(--color-text-muted)', fontSize: '0.82rem', marginTop: '0.15rem' }}>
+                        ✅ Pre-selected · ₹{product.price_per_unit || product.our_price}/day
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 <div className="select-wrapper">
                   <select value={product ? product.id : ''} onChange={e => setProduct(products.find(p => p.id === parseInt(e.target.value)))}
                     className="subscription-select">
                     {products.map(p => (
-                      <option key={p.id} value={p.id}>{p.name} - ₹{p.price_per_unit}/day</option>
+                      <option key={p.id} value={p.id}>{p.name} - ₹{p.price_per_unit || p.our_price}/day</option>
                     ))}
                   </select>
                   <div className="select-wrapper-arrow">▼</div>
@@ -291,7 +348,7 @@ export default function Subscriptions() {
                     <div className="plan-desc">{p.desc}</div>
                     {!p.custom && product && (
                       <div className="plan-price">
-                        ₹{product.price_per_unit * p.days}
+                        ₹{(product.price_per_unit || product.our_price || 0) * p.days}
                       </div>
                     )}
                   </motion.button>
@@ -309,7 +366,7 @@ export default function Subscriptions() {
                   </div>
                   {product && (
                     <div style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--color-accent)' }}>
-                      Total: ₹{product.price_per_unit} × {nDays} days = ₹{totalPrice}
+                      Total: ₹{product.price_per_unit || product.our_price} × {nDays} days = ₹{totalPrice}
                     </div>
                   )}
                 </motion.div>
@@ -330,7 +387,7 @@ export default function Subscriptions() {
                     Total: ₹{totalPrice}
                   </div>
                   <div style={{ fontSize: '0.9rem', color: 'var(--color-text-muted)', marginTop: '0.5rem' }}>
-                    ₹{product?.price_per_unit}/day × {schedule === 'n_days' ? nDays : PLANS.find(p => p.id === schedule)?.days} days
+                    ₹{product?.price_per_unit || product?.our_price}/day × {schedule === 'n_days' ? nDays : PLANS.find(p => p.id === schedule)?.days} days
                   </div>
                 </div>
                 <motion.button whileHover={{ y: -2 }} whileTap={{ scale: 0.98 }} className="btn-primary" onClick={handleProceedToAddress}
@@ -353,28 +410,40 @@ export default function Subscriptions() {
               </h2>
 
               <div className="address-grid">
-                {[
-                  ['name', 'Full Name', 'text'],
-                  ['flat', 'Flat / Door No', 'text'],
-                  ['building', 'Building Name', 'text'],
-                  ['street', 'Street / Area Name', 'text'],
-                  ['pincode', 'Pincode', 'text'],
-                  ['phone', 'Phone Number', 'tel']
-                ].map(([k, l, t]) => (
-                  <div key={k} className={`input-group ${k === 'street' ? 'span-2' : ''}`}>
-                    <label className="input-label">{l} *</label>
-                    <input 
-                      type={t} 
-                      placeholder={l} 
-                      value={address[k]} 
-                      onChange={setAddr(k)} 
-                      className="address-input" 
-                    />
-                  </div>
-                ))}
+                <div className="input-group">
+                  <label className="input-label">Full Name *</label>
+                  <input type="text" placeholder="Full Name" value={address.name} onChange={setAddr("name")} className="address-input" />
+                </div>
+                <div className="input-group">
+                  <label className="input-label">Phone Number *</label>
+                  <input type="tel" placeholder="Phone Number" value={address.phone} onChange={setAddr("phone")} className="address-input" />
+                </div>
+                <div className="input-group">
+                  <label className="input-label">Flat / Door No *</label>
+                  <input type="text" placeholder="Flat / Door No" value={address.flat} onChange={setAddr("flat")} className="address-input" />
+                </div>
+                <div className="input-group">
+                  <label className="input-label">Building Name *</label>
+                  <select value={address.building} onChange={setAddr("building")} className="address-input" style={{ height: '46px', background: '#fff' }}>
+                    {BUILDINGS.map(b => <option key={b} value={b}>{b}</option>)}
+                  </select>
+                </div>
+                <div className="input-group">
+                  <label className="input-label">Pincode *</label>
+                  <select value={address.pincode} onChange={setAddr("pincode")} className="address-input" style={{ height: '46px', background: '#fff' }}>
+                    {PINCODES.map(p => <option key={p} value={p}>{p}</option>)}
+                  </select>
+                </div>
                 <div className="input-group">
                   <label className="input-label">City</label>
                   <input type="text" value="Hyderabad" readOnly className="address-input" />
+                </div>
+                <div className="input-group span-2">
+                  <label className="input-label">Delivery Timing *</label>
+                  <select value={timing} onChange={e => setTiming(e.target.value)} className="address-input" style={{ height: '46px', background: '#fff' }}>
+                    <option value="6 am - 7:30 am">6 AM - 7:30 AM (Morning Delivery)</option>
+                    <option value="6 pm - 9 pm">6 PM - 9 PM (Evening Delivery)</option>
+                  </select>
                 </div>
               </div>
 

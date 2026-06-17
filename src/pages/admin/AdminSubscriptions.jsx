@@ -182,7 +182,7 @@ export default function AdminSubscriptions() {
           <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '900px' }}>
             <thead>
               <tr style={{ borderBottom: '2px solid var(--color-accent)' }}>
-                {['ID', 'Customer', 'Product', 'Schedule', 'Status', 'Start Date', 'End Date', 'Next Delivery', 'Price/Day', 'Actions'].map(h => (
+                {['ID', 'Customer', 'Product', 'Schedule', 'Timing', 'Status', 'Start Date', 'End Date', 'Next Delivery', 'Price/Day', 'Actions'].map(h => (
                   <th key={h} style={{ textAlign: 'left', padding: '0.75rem', fontFamily: 'var(--font-serif)', color: 'var(--color-primary)', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: 1 }}>{h}</th>
                 ))}
               </tr>
@@ -201,6 +201,30 @@ export default function AdminSubscriptions() {
                     </td>
                     <td style={{ padding: '0.75rem', color: 'var(--color-text)', fontWeight: 500 }}>{s.product_name}</td>
                     <td style={{ padding: '0.75rem' }}>{getScheduleBadge(s.schedule)}</td>
+                    <td style={{ padding: '0.75rem' }}>
+                      {(() => {
+                        // Extract timing from address string: looks for "Time: 6 am - 7:30 am" in parentheses
+                        const addr = s.customer_address || s.address || '';
+                        const match = addr.match(/Time:\s*([^,)]+)/i);
+                        if (match) {
+                          return (
+                            <span style={{
+                              display: 'inline-flex', alignItems: 'center', gap: '4px',
+                              padding: '0.3rem 0.65rem',
+                              background: 'linear-gradient(135deg, rgba(201,168,106,0.25), rgba(201,168,106,0.12))',
+                              border: '1.5px solid var(--color-accent)',
+                              color: '#7a5c1e',
+                              borderRadius: '8px',
+                              fontSize: '0.78rem', fontWeight: 700,
+                              whiteSpace: 'nowrap'
+                            }}>
+                              ⏰ {match[1].trim()}
+                            </span>
+                          );
+                        }
+                        return <span style={{ color: 'var(--color-text-muted)', fontSize: '0.8rem' }}>—</span>;
+                      })()}
+                    </td>
                     <td style={{ padding: '0.75rem' }}>{getStatusBadge(s.status)}</td>
                     <td style={{ padding: '0.75rem', color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>{formatDate(s.start_date)}</td>
                     <td style={{ padding: '0.75rem', color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>{formatDate(s.end_date)}</td>
@@ -225,7 +249,7 @@ export default function AdminSubscriptions() {
                 );
               })}
               {filteredSubs.length === 0 && (
-                <tr><td colSpan={10} style={{ padding: '3rem', textAlign: 'center', color: 'var(--color-text-muted)' }}>
+                <tr><td colSpan={11} style={{ padding: '3rem', textAlign: 'center', color: 'var(--color-text-muted)' }}>
                   No subscriptions match the selected filter.
                 </td></tr>
               )}

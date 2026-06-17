@@ -190,3 +190,21 @@ h1, h2, h3, h4, h5, h6, .vintage-title {
     text-align: center !important;
   }
 }
+
+/* Premium Dropdown Styles */
+select.checkout-input,
+select.address-input,
+.checkout-form select,
+.address-grid select,
+form select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg fill='%232E4A2E' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/><path d='M0 0h24v24H0z' fill='none'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  background-size: 18px;
+  padding-right: 2.5rem !important;
+  cursor: pointer;
+  background-color: #fff;
+}

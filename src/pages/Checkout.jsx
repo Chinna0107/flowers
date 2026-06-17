@@ -7,6 +7,7 @@ import { CheckCircle2, MapPin, CreditCard, ChevronRight, ChevronLeft, ShieldChec
 import "./Checkout.css";
 import { API } from "../config/api";
 import Swal from "sweetalert2";
+import { BUILDINGS, PINCODES } from "../data/addressOptions.js";
 
 const loadRazorpay = () => new Promise((resolve) => {
   if (window.Razorpay) return resolve(true);
@@ -17,6 +18,19 @@ const loadRazorpay = () => new Promise((resolve) => {
   document.body.appendChild(s);
 });
 
+const displayAddress = (addrStr) => {
+  if (!addrStr) return "";
+  try {
+    const parsed = typeof addrStr === 'string' ? JSON.parse(addrStr) : addrStr;
+    if (parsed && typeof parsed === 'object') {
+      return `${parsed.flat || ''}, ${parsed.building || ''}, Hyderabad - ${parsed.pincode || ''}`;
+    }
+  } catch (e) {
+    // not JSON
+  }
+  return addrStr;
+};
+
 export default function Checkout() {
   const { cart, clearCart } = useCart();
   const { token, user } = useAuth();
@@ -26,7 +40,9 @@ export default function Checkout() {
   const [loading, setLoading] = useState(false);
   const [savedAddress, setSavedAddress] = useState(null);
   const [useNewAddress, setUseNewAddress] = useState(false);
-  const [address, setAddress] = useState({ name: '', flat: '', building: '', street: '', city: 'Hyderabad', pincode: '', phone: '' });
+  const [address, setAddress] = useState({ name: '', flat: '', building: BUILDINGS[0], city: 'Hyderabad', pincode: PINCODES[0], phone: '' });
+  const [timing, setTiming] = useState("6 am - 7:30 am");
+  const [customTiming, setCustomTiming] = useState("");
   const set = (k) => (e) => setAddress(p => ({ ...p, [k]: e.target.value }));
 
   const [couponCode, setCouponCode] = useState("");
@@ -46,7 +62,22 @@ export default function Checkout() {
       .then(r => r.json())
       .then(data => {
         if (data.address) {
-          setSavedAddress(data.address);
+          try {
+            const parsed = JSON.parse(data.address);
+            if (parsed && typeof parsed === 'object') {
+              setAddress(p => ({
+                ...p,
+                flat: parsed.flat || '',
+                building: parsed.building || BUILDINGS[0],
+                pincode: parsed.pincode || PINCODES[0]
+              }));
+              setSavedAddress(`${parsed.flat || ''}, ${parsed.building || ''}, Hyderabad - ${parsed.pincode || ''}`);
+            } else {
+              setSavedAddress(data.address);
+            }
+          } catch (e) {
+            setSavedAddress(data.address);
+          }
           setUseNewAddress(false);
         } else {
           setUseNewAddress(true);
@@ -104,10 +135,18 @@ export default function Checkout() {
     if (!token) { navigate('/auth'); return; }
     setLoading(true);
     try {
-      const cartPayload = cart.map(i => ({ id: i.id, name: i.name, price: i.price, quantity: i.quantity, img: i.img }));
+      const cartPayload = cart.map(i => ({
+        id: i.id,
+        name: i.name,
+        price: i.price,
+        quantity: i.quantity,
+        img: i.img,
+        unitQuantity: i.unitQuantity
+      }));
+      const selectedTiming = timing === 'custom' ? `Custom: ${customTiming}` : timing;
       const addrPayload = (!useNewAddress && savedAddress)
-        ? { name: user?.name || '', address: savedAddress, phone: address.phone }
-        : { ...address, name: address.name || user?.name || '' };
+        ? { name: user?.name || '', address: displayAddress(savedAddress), phone: address.phone, timing: selectedTiming }
+        : { ...address, name: address.name || user?.name || '', timing: selectedTiming };
 
       if (paymentMethod === 'cod') {
         const res = await fetch(`${API}/payment/cod`, {
@@ -181,27 +220,38 @@ export default function Checkout() {
   };
 
   const handleNextStep = () => {
-    if (step === 2 && (useNewAddress || !savedAddress)) {
-      // Validate that all fields in address are filled
-      const requiredFields = ['name', 'flat', 'building', 'street', 'pincode', 'phone'];
-      const fieldLabels = {
-        name: 'Full Name',
-        flat: 'Flat / Door No',
-        building: 'Building Name',
-        street: 'Street / Area',
-        pincode: 'Pincode',
-        phone: 'Phone Number'
-      };
-      for (const field of requiredFields) {
-        if (!address[field] || !address[field].trim()) {
-          Swal.fire({
-            icon: 'warning',
-            title: 'Missing Field',
-            text: `Please enter your ${fieldLabels[field]}. All address fields are required.`,
-            confirmButtonColor: '#2E4A2E'
-          });
-          return;
+    if (step === 2) {
+      if (useNewAddress || !savedAddress) {
+        // Validate that all fields in address are filled
+        const requiredFields = ['name', 'flat', 'building', 'pincode', 'phone'];
+        const fieldLabels = {
+          name: 'Full Name',
+          flat: 'Flat / Door No',
+          building: 'Building Name',
+          pincode: 'Pincode',
+          phone: 'Phone Number'
+        };
+        for (const field of requiredFields) {
+          if (!address[field] || !address[field].trim()) {
+            Swal.fire({
+              icon: 'warning',
+              title: 'Missing Field',
+              text: `Please enter your ${fieldLabels[field]}. All address fields are required.`,
+              confirmButtonColor: '#2E4A2E'
+            });
+            return;
+          }
         }
+      }
+      // Validate timing
+      if (timing === 'custom' && (!customTiming || !customTiming.trim())) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Missing Delivery Timing',
+          text: 'Please specify your custom delivery timing.',
+          confirmButtonColor: '#2E4A2E'
+        });
+        return;
       }
     }
     setStep(s => s + 1);
@@ -336,18 +386,54 @@ export default function Checkout() {
 
                 {(useNewAddress || !savedAddress) && (
                   <div className="checkout-form">
-                    {[['name','Full Name','text'],['flat','Flat / Door No','text'],['building','Building Name','text'],['street','Street / Area','text'],['pincode','Pincode','text'],['phone','Phone Number','tel']].map(([k,l,t]) => (
-                      <div key={k} className="checkout-input-group">
-                        <label className="checkout-label">{l}</label>
-                        <input type={t} placeholder={l} value={address[k]} onChange={set(k)} className="checkout-input" />
-                      </div>
-                    ))}
+                    <div className="checkout-input-group">
+                      <label className="checkout-label">Full Name</label>
+                      <input type="text" placeholder="Full Name" value={address.name} onChange={set("name")} className="checkout-input" />
+                    </div>
+                    <div className="checkout-input-group">
+                      <label className="checkout-label">Phone Number</label>
+                      <input type="tel" placeholder="Phone Number" value={address.phone} onChange={set("phone")} className="checkout-input" />
+                    </div>
+                    <div className="checkout-input-group">
+                      <label className="checkout-label">Flat / Door No</label>
+                      <input type="text" placeholder="Flat / Door No" value={address.flat} onChange={set("flat")} className="checkout-input" />
+                    </div>
+                    <div className="checkout-input-group">
+                      <label className="checkout-label">Building Name</label>
+                      <select value={address.building} onChange={set("building")} className="checkout-input" style={{ height: '46px', background: '#fff' }}>
+                        {BUILDINGS.map(b => <option key={b} value={b}>{b}</option>)}
+                      </select>
+                    </div>
+                    <div className="checkout-input-group">
+                      <label className="checkout-label">Pincode</label>
+                      <select value={address.pincode} onChange={set("pincode")} className="checkout-input" style={{ height: '46px', background: '#fff' }}>
+                        {PINCODES.map(p => <option key={p} value={p}>{p}</option>)}
+                      </select>
+                    </div>
                     <div className="checkout-input-group">
                       <label className="checkout-label">City</label>
-                      <input type="text" defaultValue="Hyderabad" readOnly className="checkout-input" />
+                      <input type="text" value="Hyderabad" readOnly className="checkout-input" />
                     </div>
                   </div>
                 )}
+
+                <div style={{ marginTop: '2rem', borderTop: '1px dashed rgba(201,168,106,0.3)', paddingTop: '1.5rem' }}>
+                  <h3 className="checkout-step-title" style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>Delivery Timing</h3>
+                  <div className="checkout-input-group">
+                    <label className="checkout-label">Choose Delivery Timing</label>
+                    <select value={timing} onChange={e => setTiming(e.target.value)} className="checkout-input" style={{ height: '46px', background: '#fff' }}>
+                      <option value="6 am - 7:30 am">6 AM - 7:30 AM (Morning Delivery)</option>
+                      <option value="6 pm - 9 pm">6 PM - 9 PM (Evening Delivery)</option>
+                      <option value="custom">Custom Timing</option>
+                    </select>
+                  </div>
+                  {timing === 'custom' && (
+                    <div className="checkout-input-group" style={{ marginTop: '1rem' }}>
+                      <label className="checkout-label">Specify Custom Delivery Timing</label>
+                      <input type="text" placeholder="e.g. 10:00 AM, 3:00 PM" value={customTiming} onChange={e => setCustomTiming(e.target.value)} className="checkout-input" />
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 

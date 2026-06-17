@@ -388,6 +388,11 @@
   gap: 0.5rem;
   padding: 0 1.1rem 1.2rem;
 }
+/* When only one action button is present */
+.product-actions.single-action {
+  display: block;
+  padding: 0 1.1rem 1.2rem;
+}
 
 .pa-buy {
   background: var(--color-primary);

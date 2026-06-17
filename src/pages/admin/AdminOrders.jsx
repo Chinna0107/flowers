@@ -24,13 +24,15 @@ const handlePrintOrder = (order) => {
     try {
       const parsedAddr = typeof order.address === 'string' ? JSON.parse(order.address) : order.address;
       if (parsedAddr && typeof parsedAddr === 'object') {
+        const timingHtml = parsedAddr.timing ? `<div style="margin-top: 5px; font-weight: bold; color: #2E4A2E;">Delivery Timing: ${parsedAddr.timing}</div>` : '';
         if (parsedAddr.address) {
-          addressHtml = `<div>${parsedAddr.address}</div>`;
+          addressHtml = `<div>${parsedAddr.address}</div>${timingHtml}`;
         } else {
           addressHtml = `
             <div>${parsedAddr.flat || ''} ${parsedAddr.building || ''}</div>
             <div>${parsedAddr.street || ''}</div>
             <div>${parsedAddr.city || ''} - ${parsedAddr.pincode || ''}</div>
+            ${timingHtml}
           `;
         }
         customerPhone = parsedAddr.phone || order.phone || order.customer_phone || '';
@@ -180,7 +182,7 @@ export default function AdminOrders() {
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ borderBottom: '2px solid var(--color-accent)' }}>
-                {['Order ID', 'Customer', 'Total', 'Date', 'Status', 'Update', 'Actions'].map(h => (
+                {['Order ID', 'Customer', 'Timing', 'Total', 'Date', 'Status', 'Update', 'Actions'].map(h => (
                   <th key={h} style={{ textAlign: 'left', padding: '0.5rem 0.75rem', fontFamily: 'var(--font-serif)', color: 'var(--color-primary)', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: 1 }}>{h}</th>
                 ))}
               </tr>
@@ -192,6 +194,31 @@ export default function AdminOrders() {
                   <td style={{ padding: '0.75rem' }}>
                     <p style={{ margin: 0, fontWeight: 600, color: 'var(--color-text)' }}>{o.customer_name}</p>
                     <p style={{ margin: 0, fontSize: '0.78rem', color: 'var(--color-text-muted)' }}>{o.customer_email}</p>
+                  </td>
+                  <td style={{ padding: '0.75rem' }}>
+                    {(() => {
+                      try {
+                        const parsed = typeof o.address === 'string' ? JSON.parse(o.address) : o.address;
+                        if (parsed && parsed.timing) {
+                          return (
+                            <span style={{
+                              display: 'inline-flex', alignItems: 'center', gap: '5px',
+                              padding: '0.35rem 0.75rem',
+                              background: 'linear-gradient(135deg, rgba(201,168,106,0.25), rgba(201,168,106,0.12))',
+                              border: '1.5px solid var(--color-accent)',
+                              color: '#7a5c1e',
+                              borderRadius: '8px',
+                              fontSize: '0.8rem', fontWeight: 700,
+                              letterSpacing: '0.3px',
+                              whiteSpace: 'nowrap'
+                            }}>
+                              ⏰ {parsed.timing}
+                            </span>
+                          );
+                        }
+                      } catch(e){}
+                      return <span style={{ color: 'var(--color-text-muted)', fontSize: '0.8rem' }}>—</span>;
+                    })()}
                   </td>
                   <td style={{ padding: '0.75rem', color: 'var(--color-accent)', fontWeight: 700 }}>₹{parseFloat(o.total).toLocaleString('en-IN')}</td>
                   <td style={{ padding: '0.75rem', color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>{new Date(o.created_at).toLocaleDateString('en-IN')}</td>
@@ -211,7 +238,7 @@ export default function AdminOrders() {
                   </td>
                 </tr>
               ))}
-              {orders.length === 0 && <tr><td colSpan={7} style={{ padding: '2rem', textAlign: 'center', color: 'var(--color-text-muted)' }}>No orders found.</td></tr>}
+              {orders.length === 0 && <tr><td colSpan={8} style={{ padding: '2rem', textAlign: 'center', color: 'var(--color-text-muted)' }}>No orders found.</td></tr>}
             </tbody>
           </table>
         )}

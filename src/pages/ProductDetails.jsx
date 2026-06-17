@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useCart } from "../store/cartStore.jsx";
 import { useAuth } from "../store/authStore";
-import { CATEGORIES } from "../data/products.js";
+import { CATEGORIES, getProductQuantity } from "../data/products.js";
 import { API } from "../config/api";
 import { ChevronLeft, CheckCircle2, ShieldCheck, Clock, Truck } from "lucide-react";
 
@@ -63,11 +63,15 @@ export default function ProductDetails() {
       img: product.img,
       cat: product.category,
       desc: product.description,
-      tag: product.tag
+      tag: product.tag,
+      unitQuantity: product.quantity || getProductQuantity(product)
     });
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
   };
+
+  const isPooja = product.category === 'pooja-basic' || product.category === 'pooja-premium';
+  const isFresh = product.category === 'fresh';
 
   return (
     <section className="section-pad" style={{ maxWidth: 1200, margin: '0 auto' }}>
@@ -121,6 +125,9 @@ export default function ProductDetails() {
             <div style={{ display: 'flex', alignItems: 'baseline', gap: '1rem' }}>
               <span style={{ fontFamily: 'var(--font-serif)', fontWeight: 700, color: 'var(--color-primary)', fontSize: '2rem' }}>
                 ₹{product.our_price}
+                <span style={{ fontSize: '1rem', color: 'var(--color-text-muted)', fontWeight: 'normal', marginLeft: '6px' }}>
+                  / {product.quantity || getProductQuantity(product)}
+                </span>
               </span>
               {product.mrp && product.mrp > product.our_price && (
                 <span style={{ fontSize: '1.1rem', color: 'var(--color-text-muted)', textDecoration: 'line-through' }}>
@@ -154,25 +161,39 @@ export default function ProductDetails() {
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '1rem' }}>
-            <button 
-              className={`btn-primary ${added ? 'added' : ''}`} 
-              onClick={handleBuy}
-              style={{ 
-                background: added ? '#27ae60' : 'var(--color-primary)', 
-                borderColor: added ? '#27ae60' : 'var(--color-primary)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '1rem' 
-              }}
-            >
-              {added ? <><CheckCircle2 size={18} /> Added to Cart</> : "Add to Cart"}
-            </button>
-            <Link 
-              to="/subscriptions" 
-              className="btn-outline" 
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', textDecoration: 'none', padding: '1rem' }}
-            >
-              🔁 Subscribe
-            </Link>
+          <div style={{ 
+            display: 'grid', 
+            gridTemplateColumns: (isPooja || (!isFresh && !isPooja)) ? '1fr' : '1fr 1fr', 
+            gap: '1rem', 
+            marginTop: '1rem' 
+          }}>
+            {/* Show Add to Cart if not Pooja */}
+            {!isPooja && (
+              <button 
+                className={`btn-primary ${added ? 'added' : ''}`} 
+                onClick={handleBuy}
+                style={{ 
+                  background: added ? '#27ae60' : 'var(--color-primary)', 
+                  borderColor: added ? '#27ae60' : 'var(--color-primary)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '1rem' 
+                }}
+              >
+                {added ? <><CheckCircle2 size={18} /> Added to Cart</> : "Add to Cart"}
+              </button>
+            )}
+            {/* Show Subscribe if Pooja or Fresh */}
+            {(isPooja || isFresh) && (
+              <button
+                onClick={() => navigate('/subscriptions', { state: { preSelectedProduct: product } })}
+                className={isPooja ? "btn-primary" : "btn-outline"} 
+                style={{ 
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '1rem', cursor: 'pointer',
+                  ...(isPooja ? { background: 'var(--color-primary)', borderColor: 'var(--color-primary)', color: '#FAF7F2' } : {})
+                }}
+              >
+                🔁 Subscribe
+              </button>
+            )}
           </div>
 
         </motion.div>

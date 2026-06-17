@@ -76,7 +76,14 @@ export default function Cart() {
                         <Link to={`/product/${item.id}`} style={{ textDecoration: 'none' }}>
                           <h2 className="cart-item-name">{item.name}</h2>
                         </Link>
-                        <p className="cart-item-price">₹{item.price}</p>
+                        <p className="cart-item-price">
+                          ₹{item.price}
+                          {item.unitQuantity && (
+                            <span style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', fontWeight: 'normal', marginLeft: '4px' }}>
+                              / {item.unitQuantity}
+                            </span>
+                          )}
+                        </p>
                         <div className="cart-item-total">
                           ₹{item.price * item.quantity}
                         </div>
