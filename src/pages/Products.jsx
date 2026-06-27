@@ -35,8 +35,9 @@ function ProductCard({ p, onSubscribe }) {
 
   const isPooja = p.category === 'pooja-basic' || p.category === 'pooja-premium';
   const isFresh = p.category === 'fresh';
+  const isStringOnly = p.category === 'flower-strings';
   const showBuyOnce = !isPooja;
-  const showSubscribe = isPooja || isFresh;
+  const showSubscribe = (isPooja || isFresh) && !isStringOnly;
 
   return (
     <div className="pc-card">

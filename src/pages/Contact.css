@@ -105,6 +105,12 @@
   flex-shrink: 0;
 }
 
+.cic-text {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+}
+
 .cic-label {
   font-size: 0.72rem;
   letter-spacing: 1.5px;
@@ -118,11 +124,14 @@
   font-family: 'Playfair Display', serif;
   font-weight: 700;
   color: var(--color-primary);
-  font-size: 0.97rem;
+  font-size: 0.9rem;
   margin: 0 0 0.2rem;
   text-decoration: none;
   display: block;
   transition: color 0.2s;
+  word-break: break-all;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
 }
 
 a.cic-value:hover { color: var(--color-accent); }
@@ -184,6 +193,82 @@ a.cic-value:hover { color: var(--color-accent); }
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
+}
+
+/* ── WHATSAPP SUBMIT BUTTON ───────────────────────────────────── */
+.contact-wa-submit {
+  width: 100%;
+  padding: 1rem;
+  background: #25D366;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-family: 'Playfair Display', serif;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  transition: background 0.2s, transform 0.15s;
+  letter-spacing: 0.3px;
+  margin-top: 0.25rem;
+}
+
+.contact-wa-submit:hover {
+  background: #1ebe5d;
+  transform: translateY(-1px);
+}
+
+/* ── WHATSAPP DIRECT CTA CARD ─────────────────────────────────── */
+.contact-wa-direct {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: #25D366;
+  border-radius: 12px;
+  padding: 1.1rem 1.25rem;
+  text-decoration: none;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.contact-wa-direct:hover {
+  background: #1ebe5d;
+  transform: translateY(-2px);
+}
+
+.contact-wa-direct-icon {
+  width: 48px;
+  height: 48px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* ── WHATSAPP OUTLINE BUTTON ──────────────────────────────────── */
+.contact-wa-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: transparent;
+  border: 2px solid #25D366;
+  color: #25D366;
+  border-radius: 8px;
+  font-family: 'Playfair Display', serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: 0.2s;
+}
+
+.contact-wa-btn:hover {
+  background: #25D366;
+  color: #fff;
 }
 
 .cf-row {

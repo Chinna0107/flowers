@@ -6,6 +6,7 @@ import {
   FaXTwitter,
   FaYoutube,
 } from "react-icons/fa6";
+import { FaWhatsapp, FaWhatsappSquare } from "react-icons/fa";
 const QUICK_LINKS = [
   { to: "/", label: "Home" },
   { to: "/products", label: "Products" },
@@ -66,19 +67,19 @@ export default function Footer() {
     },
     {
       icon: <FaInstagram />,
-      href: "https://instagram.com",
+      href: "https://www.instagram.com/sowgandhikafreshflowers?igsh=aWRjcWxvM2M4YzFl",
       title: "Instagram",
     },
     {
-      icon: <FaXTwitter />,
-      href: "https://x.com",
-      title: "Twitter",
+      icon: <FaWhatsapp />,
+      href: "https://wa.me/918374365897",
+      title: "WhatsApp",
     },
-    {
-      icon: <FaYoutube />,
-      href: "https://youtube.com",
-      title: "YouTube",
-    },
+    // {
+    //   icon: <FaYoutube />,
+    //   href: "https://youtube.com",
+    //   title: "YouTube",
+    // },
   ].map((s) => (
     <a
       key={s.title}
@@ -150,12 +151,12 @@ export default function Footer() {
           <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
             <div>
               <p style={{ color: "var(--color-accent)", fontSize: "0.75rem", letterSpacing: "1px", textTransform: "uppercase", margin: "0 0 0.2rem", fontFamily: "'Lato', sans-serif" }}>Phone</p>
-              <a href="tel:+919876543210" style={{ ...linkStyle, marginBottom: 0 }}>+91 98765 43210</a>
+              <a href="tel:+918374365897" style={{ ...linkStyle, marginBottom: 0 }}>+91 83743 65897</a>
               <p style={{ color: "rgba(250,247,242,0.45)", fontSize: "0.78rem", margin: "0.15rem 0 0" }}>Mon–Sat, 7am–8pm</p>
             </div>
             <div>
               <p style={{ color: "var(--color-accent)", fontSize: "0.75rem", letterSpacing: "1px", textTransform: "uppercase", margin: "0 0 0.2rem", fontFamily: "'Lato', sans-serif" }}>Email</p>
-              <a href="mailto:hello@sowgandhika.in" style={{ ...linkStyle, marginBottom: 0 }}>hello@sowgandhika.in</a>
+              <a href="mailto:sowgandhikafreshflowers@gmail.com" style={{ ...linkStyle, marginBottom: 0 }}>sowgandhikafreshflowers@gmail.com</a>
             </div>
             <div>
               <p style={{ color: "var(--color-accent)", fontSize: "0.75rem", letterSpacing: "1px", textTransform: "uppercase", margin: "0 0 0.2rem", fontFamily: "'Lato', sans-serif" }}>Location</p>

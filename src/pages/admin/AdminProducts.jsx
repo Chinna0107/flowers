@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "../../store/authStore";
 import { API } from "../../config/api";
 
-const BLANK = { name: '', category: 'fresh', price_per_unit: '', our_price: '', mrp: '', tag: '', img: '', description: '', quantity: '' };
+const BLANK = { name: '', category: 'fresh', price_per_unit: '', our_price: '', mrp: '', tag: '', img: '', description: '', quantity: '', price_variants: [] };
 
 export default function AdminProducts() {
   const { token } = useAuth();
@@ -59,7 +59,8 @@ export default function AdminProducts() {
         price_per_unit: form.price_per_unit ? +form.price_per_unit : null,
         our_price: +form.our_price,
         mrp: form.mrp ? +form.mrp : null,
-        quantity: form.quantity || null
+        quantity: form.quantity || null,
+        price_variants: JSON.stringify(form.price_variants || [])
       }),
     });
     setForm(BLANK); setEditing(null); setShowForm(false); setImageFile(null); load();
@@ -76,6 +77,7 @@ export default function AdminProducts() {
       img: p.img || '',
       description: p.description || '',
       quantity: p.quantity || '',
+      price_variants: p.price_variants || [],
     });
     setEditing(p.id);
     setShowForm(true);
@@ -152,6 +154,7 @@ export default function AdminProducts() {
                   <option value="hair">Hair Accessories</option>
                   <option value="garlands">Garlands</option>
                   <option value="jewellery">Flower Jewellery</option>
+                  <option value="flower-strings">Flower Strings</option>
                 </select>
               </div>
 
@@ -200,6 +203,55 @@ export default function AdminProducts() {
               <textarea style={{ ...inp, minHeight: '100px', resize: 'vertical' }} placeholder="Describe the product..." value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} />
             </div>
 
+            {/* Price Variants for Fresh Flowers */}
+            {form.category === 'fresh' && (
+              <div style={{ marginBottom: '1.5rem', padding: '1.5rem', background: 'rgba(46,74,46,0.05)', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-accent)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                  <label style={{ fontWeight: 600, color: 'var(--color-primary)', fontSize: '0.95rem' }}>Price Variants (Multiple Quantities)</label>
+                  <button type="button" onClick={() => setForm({ ...form, price_variants: [...form.price_variants, { quantity: '', price: '', mrp: '' }] })}
+                    style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem', background: 'var(--color-accent)', color: '#fff', border: 'none', borderRadius: 'var(--radius-md)', cursor: 'pointer', fontWeight: 600 }}>
+                    + Add Variant
+                  </button>
+                </div>
+                {form.price_variants.length === 0 && (
+                  <p style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem', fontStyle: 'italic' }}>No variants added. Click "Add Variant" to add quantity options.</p>
+                )}
+                {form.price_variants.map((v, idx) => (
+                  <div key={idx} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr auto', gap: '0.75rem', marginBottom: '0.75rem', alignItems: 'end' }}>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '0.3rem', fontSize: '0.8rem', color: 'var(--color-primary)' }}>Quantity</label>
+                      <input style={inp} placeholder="e.g. 12 Stems, 500g" value={v.quantity} onChange={e => {
+                        const updated = [...form.price_variants];
+                        updated[idx].quantity = e.target.value;
+                        setForm({ ...form, price_variants: updated });
+                      }} />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '0.3rem', fontSize: '0.8rem', color: 'var(--color-primary)' }}>Price (₹)</label>
+                      <input style={inp} type="number" placeholder="499" value={v.price} onChange={e => {
+                        const updated = [...form.price_variants];
+                        updated[idx].price = +e.target.value;
+                        setForm({ ...form, price_variants: updated });
+                      }} />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '0.3rem', fontSize: '0.8rem', color: 'var(--color-primary)' }}>MRP (₹)</label>
+                      <input style={inp} type="number" placeholder="599" value={v.mrp} onChange={e => {
+                        const updated = [...form.price_variants];
+                        updated[idx].mrp = +e.target.value;
+                        setForm({ ...form, price_variants: updated });
+                      }} />
+                    </div>
+                    <button type="button" onClick={() => {
+                      setForm({ ...form, price_variants: form.price_variants.filter((_, i) => i !== idx) });
+                    }} style={{ padding: '0.6rem', background: '#dc2626', color: '#fff', border: 'none', borderRadius: 'var(--radius-md)', cursor: 'pointer', fontWeight: 700 }}>
+                      ✕
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
             <div style={{ display: 'flex', gap: '1rem' }}>
               <button type="submit" className="btn-primary" style={{ padding: '0.75rem 2rem' }}>
                 {editing ? '💾 Update Product' : '✓ Save Product'}
@@ -217,7 +269,7 @@ export default function AdminProducts() {
           <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '800px' }}>
             <thead>
               <tr style={{ borderBottom: '2px solid var(--color-accent)' }}>
-                {['Image', 'Name', 'Category', 'Price/Unit', 'Our Price', 'MRP', 'Quantity', 'Tag', 'Coupon Eligible', 'Actions'].map(h => (
+                {['Image', 'Name', 'Category', 'Price/Unit', 'Our Price', 'MRP', 'Quantity', 'Variants', 'Tag', 'Coupon', 'Actions'].map(h => (
                   <th key={h} style={{ textAlign: 'left', padding: '0.75rem', fontFamily: 'var(--font-serif)', color: 'var(--color-primary)', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: 1 }}>{h}</th>
                 ))}
               </tr>
@@ -234,6 +286,13 @@ export default function AdminProducts() {
                   <td style={{ padding: '0.75rem', color: 'var(--color-accent)', fontWeight: 700 }}>₹{p.our_price}</td>
                   <td style={{ padding: '0.75rem', color: 'var(--color-text-muted)', textDecoration: 'line-through' }}>{p.mrp ? `₹${p.mrp}` : '—'}</td>
                   <td style={{ padding: '0.75rem', color: 'var(--color-text)' }}>{p.quantity || '—'}</td>
+                  <td style={{ padding: '0.75rem', fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>
+                    {p.price_variants && p.price_variants.length > 0 ? (
+                      <span style={{ background: 'rgba(46,74,46,0.1)', padding: '0.2rem 0.5rem', borderRadius: '8px', color: 'var(--color-primary)', fontWeight: 600 }}>
+                        {p.price_variants.length} options
+                      </span>
+                    ) : '—'}
+                  </td>
                   <td style={{ padding: '0.75rem' }}>
                     {p.tag && <span style={{ background: 'var(--color-primary)', color: 'var(--color-secondary)', padding: '0.2rem 0.6rem', borderRadius: '12px', fontSize: '0.75rem' }}>{p.tag}</span>}
                   </td>
@@ -262,7 +321,7 @@ export default function AdminProducts() {
                 </tr>
               ))}
               {products.length === 0 && (
-                <tr><td colSpan={9} style={{ padding: '3rem', textAlign: 'center', color: 'var(--color-text-muted)' }}>No products yet. Add your first product!</td></tr>
+                <tr><td colSpan={11} style={{ padding: '3rem', textAlign: 'center', color: 'var(--color-text-muted)' }}>No products yet. Add your first product!</td></tr>
               )}
             </tbody>
           </table>

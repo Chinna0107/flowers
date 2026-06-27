@@ -13,7 +13,7 @@ export default function Cart() {
   const subtotal = useMemo(() => cart.reduce((sum, item) => sum + item.price * item.quantity, 0), [cart]);
   const shipping = 0;
   const tax = Math.round(subtotal * 0.05); // 5% tax
-  const total = subtotal + shipping + tax;
+  const total = subtotal + shipping ;
 
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
 
@@ -115,10 +115,10 @@ export default function Cart() {
               <span className="summary-val">₹{subtotal}</span>
             </div>
             
-            <div className="summary-row">
-              <span>Estimated Tax (5%)</span>
+            {/* <div className="summary-row">
+              <span>Estimated Tax (0%)</span>
               <span className="summary-val">₹{tax}</span>
-            </div>
+            </div> */}
             
             <div className="summary-row">
               <span>Delivery</span>

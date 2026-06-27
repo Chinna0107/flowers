@@ -16,8 +16,9 @@ function PopularCard({ p }) {
 
   const isPooja = p.category === 'pooja-basic' || p.category === 'pooja-premium';
   const isFresh = p.category === 'fresh';
-  const showBuyOnce = !isPooja;          // Pooja = no "buy once"
-  const showSubscribe = isPooja || isFresh; // Pooja + Fresh = subscribe
+  const isStringOnly = p.category === 'flower-strings';
+  const showBuyOnce = !isPooja;
+  const showSubscribe = (isPooja || isFresh) && !isStringOnly;
   
   const handleBuy = () => {
     if (!user) { navigate('/signin'); return; }
@@ -142,16 +143,16 @@ export default function Home() {
         </div>
         <div className="home-image-strip">
           <div className="home-image-card">
-            <img src="https://freshknots.in/wp-content/uploads/2026/01/Red-Roses-B-3-540x540.jpg" alt="Fresh roses" />
+            <img src="https://res.cloudinary.com/dwgqfg2xc/image/upload/v1782584507/WhatsApp_Image_2026-06-27_at_09.33.56_umdbmp.jpg" alt="Fresh roses" />
             <div className="home-image-caption">Premium rose bouquets for special moments</div>
           </div>
           <div className="home-image-card">
-            <img src="https://m.media-amazon.com/images/I/61hyeyXSLQL.jpg" alt="Flower garlands" />
-            <div className="home-image-caption">Traditional garlands for pooja and ceremony</div>
+            <img src="https://res.cloudinary.com/dwgqfg2xc/image/upload/v1782584771/WhatsApp_Image_2026-06-17_at_22.59.33_a644rs.jpg" alt="Flower garlands" />
+            <div className="home-image-caption">Fresh Flower Strings for Decor</div>
           </div>
           <div className="home-image-card">
-            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ83lswKHgEuEExITMOvj_CkuotCSSo2eOlcw&s" alt="Bridal flower hair" />
-            <div className="home-image-caption">Bridal hair flowers with elegant fresh design</div>
+            <img src="https://res.cloudinary.com/dwgqfg2xc/image/upload/v1782584626/WhatsApp_Image_2026-06-27_at_09.42.10_eixvv6.jpg" alt="Bridal flower hair" />
+            <div className="home-image-caption">Traditional garlands for pooja and ceremony</div>
           </div>
         </div>
       </section>

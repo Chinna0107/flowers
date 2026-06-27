@@ -13,9 +13,9 @@ const VALUES = [
 ];
 
 const TEAM = [
-  { name: "Sowgandhika",    role: "Founder & Head Florist",    img: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&h=300&fit=crop&q=80", quote: "Every flower is a soul blossoming in nature." },
-  { name: "Priya Lakshmi",  role: "Bridal Styling Expert",     img: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=300&h=300&fit=crop&q=80", quote: "Bridal florals are my canvas — tradition is my art." },
-  { name: "Ravi Kumar",     role: "Delivery & Operations",     img: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300&h=300&fit=crop&q=80", quote: "Fresh flowers deserve a flawless journey." },
+  // { name: "Sowgandhika",    role: "Founder & Head Florist",    img: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&h=300&fit=crop&q=80", quote: "Every flower is a soul blossoming in nature." },
+  // { name: "Priya Lakshmi",  role: "Bridal Styling Expert",     img: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=300&h=300&fit=crop&q=80", quote: "Bridal florals are my canvas — tradition is my art." },
+  // { name: "Ravi Kumar",     role: "Delivery & Operations",     img: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300&h=300&fit=crop&q=80", quote: "Fresh flowers deserve a flawless journey." },
 ];
 
 const MILESTONES = [
@@ -52,7 +52,7 @@ export default function About() {
           <div className="about-story-img-col">
             <div className="about-story-img-frame">
               <img
-                src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=700&h=900&fit=crop&q=85"
+                src="https://res.cloudinary.com/dwgqfg2xc/image/upload/v1782584364/WhatsApp_Image_2026-06-27_at_16.06.51_n1ra0k.jpg"
                 alt="Sowgandhika flowers"
                 className="about-story-img"
               />
@@ -121,7 +121,7 @@ export default function About() {
       </section>
 
       {/* ── TEAM ── */}
-      <section className="about-team">
+      {/* <section className="about-team">
         <div className="about-team-inner">
           <div className="about-values-header">
             <span className="section-tag-a">The People</span>
@@ -145,7 +145,7 @@ export default function About() {
             ))}
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* ── CLOSING CTA BANNER ── */}
       <section className="about-cta-banner">

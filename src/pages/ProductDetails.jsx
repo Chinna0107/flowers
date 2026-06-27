@@ -15,12 +15,16 @@ export default function ProductDetails() {
   const [added, setAdded] = useState(false);
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [selectedVariant, setSelectedVariant] = useState(null);
 
   useEffect(() => {
     fetch(`${API}/products/${id}`)
       .then(r => r.json())
       .then(data => {
         setProduct(data);
+        if (data.price_variants && data.price_variants.length > 0) {
+          setSelectedVariant(data.price_variants[0]);
+        }
         setLoading(false);
       })
       .catch(err => {
@@ -48,7 +52,11 @@ export default function ProductDetails() {
   }
 
   const category = CATEGORIES.find(c => c.key === product.category)?.label || "Flowers";
-  const off = product.mrp && product.mrp > product.our_price ? Math.round((1 - product.our_price / product.mrp) * 100) : 0;
+  const hasVariants = product.category === 'fresh' && product.price_variants && product.price_variants.length > 0;
+  const displayPrice = hasVariants && selectedVariant ? selectedVariant.price : product.our_price;
+  const displayMrp = hasVariants && selectedVariant ? selectedVariant.mrp : product.mrp;
+  const displayQuantity = hasVariants && selectedVariant ? selectedVariant.quantity : (product.quantity || getProductQuantity(product));
+  const off = displayMrp && displayMrp > displayPrice ? Math.round((1 - displayPrice / displayMrp) * 100) : 0;
 
   const handleBuy = () => {
     if (!user) {
@@ -58,13 +66,13 @@ export default function ProductDetails() {
     addToCart({
       id: product.id,
       name: product.name,
-      price: product.our_price,
-      original: product.mrp || product.our_price,
+      price: displayPrice,
+      original: displayMrp || displayPrice,
       img: product.img,
       cat: product.category,
       desc: product.description,
       tag: product.tag,
-      unitQuantity: product.quantity || getProductQuantity(product)
+      unitQuantity: displayQuantity
     });
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
@@ -124,14 +132,14 @@ export default function ProductDetails() {
             </h1>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: '1rem' }}>
               <span style={{ fontFamily: 'var(--font-serif)', fontWeight: 700, color: 'var(--color-primary)', fontSize: '2rem' }}>
-                ₹{product.our_price}
+                ₹{displayPrice}
                 <span style={{ fontSize: '1rem', color: 'var(--color-text-muted)', fontWeight: 'normal', marginLeft: '6px' }}>
-                  / {product.quantity || getProductQuantity(product)}
+                  / {displayQuantity}
                 </span>
               </span>
-              {product.mrp && product.mrp > product.our_price && (
+              {displayMrp && displayMrp > displayPrice && (
                 <span style={{ fontSize: '1.1rem', color: 'var(--color-text-muted)', textDecoration: 'line-through' }}>
-                  ₹{product.mrp}
+                  ₹{displayMrp}
                 </span>
               )}
             </div>
@@ -145,6 +153,38 @@ export default function ProductDetails() {
           <p style={{ fontSize: '1.05rem', color: 'var(--color-text-muted)', lineHeight: 1.6, margin: 0 }}>
             {product.description}
           </p>
+
+          {/* Quantity Variants for Fresh Flowers */}
+          {hasVariants && (
+            <div>
+              <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: 600, marginBottom: '0.75rem', color: 'var(--color-primary)' }}>
+                Select Quantity:
+              </label>
+              <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                {product.price_variants.map((variant, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setSelectedVariant(variant)}
+                    style={{
+                      padding: '0.75rem 1.25rem',
+                      border: `2px solid ${selectedVariant === variant ? 'var(--color-primary)' : '#e0d9d0'}`,
+                      background: selectedVariant === variant ? 'rgba(46,74,46,0.08)' : 'transparent',
+                      borderRadius: '10px',
+                      cursor: 'pointer',
+                      fontFamily: 'var(--font-sans)',
+                      fontWeight: 600,
+                      fontSize: '0.9rem',
+                      color: selectedVariant === variant ? 'var(--color-primary)' : 'var(--color-text-muted)',
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    <div>{variant.quantity}</div>
+                    <div style={{ fontSize: '0.85rem', marginTop: '2px' }}>₹{variant.price}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', padding: '1.5rem', background: 'rgba(250,247,242,0.5)', border: '1px solid rgba(201,168,106,0.2)', borderRadius: '12px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: 'var(--color-primary)' }}>
