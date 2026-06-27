@@ -147,7 +147,7 @@ export default function Home() {
             <div className="home-image-caption">Premium rose bouquets for special moments</div>
           </div>
           <div className="home-image-card">
-            <img src="https://res.cloudinary.com/dwgqfg2xc/image/upload/v1782584771/WhatsApp_Image_2026-06-17_at_22.59.33_a644rs.jpg" alt="Flower garlands" />
+            <img src="https://res.cloudinary.com/dikovivqq/image/upload/v1782588135/WhatsApp_Image_2026-06-19_at_17.10.10_uvplls.jpg" alt="Flower garlands" />
             <div className="home-image-caption">Fresh Flower Strings for Decor</div>
           </div>
           <div className="home-image-card">

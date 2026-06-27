@@ -1,12 +1,12 @@
 export const CATEGORIES = [
   { key: "all",            label: "All Products",      sub: "",              img: "https://www.bbassets.com/media/uploads/p/l/40232195_2-fresho-assorted-puja-flowers-greens-mix-to-decorate-for-festivals-puja.jpg" },
-  { key: "pooja-premium",  label: "Pooja Flowers Mix", sub: "Premium",       img: "https://www.bbassets.com/media/uploads/p/l/40232195_2-fresho-assorted-puja-flowers-greens-mix-to-decorate-for-festivals-puja.jpg" },
-  { key: "pooja-basic",    label: "Pooja Flowers Mix", sub: "Basic",         img: "https://m.media-amazon.com/images/I/81HWdtZ5kIL.jpg" },
-  { key: "fresh",          label: "Fresh Flowers",     sub: "Daily Bloom",   img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQbQDjTFJkNdcxUOir8IQ0JbBnjBdYSV6EbDA&s" },
-  { key: "flower-strings", label: "Flower Strings",    sub: "Décor & Festive", img: "https://m.media-amazon.com/images/I/715TCG-Nf7L.jpg" },
+  { key: "pooja-premium",  label: "Pooja Flowers Mix", sub: "Premium",       img: "https://res.cloudinary.com/dikovivqq/image/upload/v1782588325/WhatsApp_Image_2026-06-28_at_00.55.02_t49gjj.jpg" },
+  { key: "pooja-basic",    label: "Pooja Flowers Mix", sub: "Basic",         img: "https://res.cloudinary.com/dikovivqq/image/upload/v1782588423/WhatsApp_Image_2026-06-28_at_00.56.38_v6pxvw.jpg" },
+  { key: "fresh",          label: "Fresh Flowers",     sub: "Daily Bloom",   img: "https://res.cloudinary.com/dikovivqq/image/upload/v1782588504/WhatsApp_Image_2026-06-28_at_00.58.06_ntom8q.jpg" },
+  { key: "flower-strings", label: "Flower Strings",    sub: "Décor & Festive", img: "https://res.cloudinary.com/dikovivqq/image/upload/v1782589221/WhatsApp_Image_2026-06-28_at_01.09.51_o404nn.jpg" },
   { key: "garlands",       label: "Garlands",          sub: "All Occasions", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTCNpMYcZG5dy7pRt69t2EDW0fPIXeV-YgiMA&s" },
   { key: "poola-jada",     label: "Poola Jada",        sub: "Bridal",        img: "https://5.imimg.com/data5/ANDROID/Default/2023/10/355539021/XF/AY/IY/157964413/product-jpeg.jpg" },
-  { key: "hair",           label: "Hair Accessories",  sub: "Fresh Flower",  img: "https://hairdramacompany.com/cdn/shop/files/CLP-0203_6f66cf7e-0e29-4eb0-8a4f-da3760e51e8d.jpg?v=1766742163" },
+  { key: "hair",           label: "Hair Accessories",  sub: "Fresh Flower",  img: "https://res.cloudinary.com/dikovivqq/image/upload/v1782588633/WhatsApp_Image_2026-06-28_at_01.00.10_g3ajqr.jpg" },
   { key: "jewellery",      label: "Flower Jewellery",  sub: "Traditional",   img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRF2MY75g7VxRHwAhrMfZtRwBNyCGCQcImFXQ&s" },
   ];
 
