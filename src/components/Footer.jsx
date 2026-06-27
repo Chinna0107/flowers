@@ -20,9 +20,10 @@ const CATEGORIES = [
   { to: "/products?cat=pooja-premium", label: "Pooja Flowers – Premium" },
   { to: "/products?cat=pooja-basic",   label: "Pooja Flowers – Basic" },
   { to: "/products?cat=fresh",         label: "Fresh Flowers" },
+  { to: "/products?cat=flower-strings", label: "Flower Strings" },
+  { to: "/products?cat=garlands",      label: "Garlands" },
   { to: "/products?cat=poola-jada",    label: "Poola Jada" },
   { to: "/products?cat=hair-accessories", label: "Hair Accessories" },
-  { to: "/products?cat=garlands",      label: "Garlands" },
   { to: "/products?cat=jewellery",     label: "Flower Jewellery" },
 ];
 
