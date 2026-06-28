@@ -19,8 +19,8 @@ const TEAM = [
 ];
 
 const MILESTONES = [
-  { year: "2025",   label: "Founded",            desc: "Started with a dream and a small cart of flowers in Hyderabad." },
-  { year: "500+",   label: "Happy Customers",    desc: "Serving homes, temples, weddings and events across Hyderabad." },
+  { year: "2026",   label: "Founded",            desc: "Started with a dream and a small cart of flowers in Hyderabad." },
+  // { year: "500+",   label: "Happy Customers",    desc: "Serving homes, temples, weddings and events across Hyderabad." },
   { year: "50+",    label: "Products",           desc: "From daily pooja packs to bridal Poola Jada — we have it all." },
   { year: "100%",   label: "Fresh Daily",        desc: "Every single product is sourced and crafted on the day of delivery." },
 ];
@@ -58,7 +58,7 @@ export default function About() {
               />
               <div className="about-story-img-badge">
                 <span style={{ fontSize: "1.6rem" }}>✿</span>
-                <span style={{ fontFamily: "'Playfair Display', serif", fontSize: "0.8rem", color: "var(--color-accent)", letterSpacing: 1 }}>EST. 2025</span>
+                <span style={{ fontFamily: "'Playfair Display', serif", fontSize: "0.8rem", color: "var(--color-accent)", letterSpacing: 1 }}>EST. 2026</span>
               </div>
             </div>
           </div>
