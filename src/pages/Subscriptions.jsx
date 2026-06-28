@@ -10,16 +10,115 @@ import "./Subscriptions.css";
 import { BUILDINGS, PINCODES } from "../data/addressOptions.js";
 
 
+const WEEKDAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+
 const PLANS = [
-  { id: 'monthly', label: 'Monthly', icon: <Calendar size={24} />, desc: 'Delivery every 30 days', days: 30 },
-  { id: 'weekly', label: 'Weekly', icon: <Flower2 size={24} />, desc: 'Delivery every 7 days', days: 7 },
-  { id: 'alternate', label: 'Alternate Days', icon: <Zap size={24} />, desc: 'Delivery every 2 days for 30 days', days: 30, interval: 2 },
+  { id: 'monthly', label: 'Monthly', icon: <Calendar size={24} />, desc: 'Daily delivery for 30 days', deliveries: 30, days: 30 },
+  { id: 'weekly', label: 'Weekly', icon: <Flower2 size={24} />, desc: '4 deliveries/month · choose your day', deliveries: 4, days: 28 },
+  { id: 'alternate', label: 'Alternate Days', icon: <Zap size={24} />, desc: '15 deliveries in 30 days (every 2nd day)', deliveries: 15, days: 30 },
   { id: 'n_days', label: 'Custom N Days', icon: <Repeat size={24} />, desc: 'Choose how many days you want', custom: true },
 ];
+
+// Returns array of Date objects for delivery dates starting from `start`
+function getDeliveryDates(schedule, weekday, nDays, start = new Date()) {
+  const dates = [];
+  const s = new Date(start);
+  s.setHours(0, 0, 0, 0);
+
+  if (schedule === 'monthly') {
+    let d = new Date(s);
+    for (let i = 0; i < 30; i++) {
+      dates.push(new Date(d));
+      d.setDate(d.getDate() + 1);
+    }
+  } else if (schedule === 'alternate') {
+    let d = new Date(s);
+    for (let i = 0; i < 15; i++) {
+      dates.push(new Date(d));
+      d.setDate(d.getDate() + 2);
+    }
+  } else if (schedule === 'weekly') {
+    let d = new Date(s);
+    // advance to chosen weekday
+    while (d.getDay() !== weekday) d.setDate(d.getDate() + 1);
+    for (let i = 0; i < 4; i++) {
+      dates.push(new Date(d));
+      d.setDate(d.getDate() + 7);
+    }
+  } else if (schedule === 'n_days') {
+    let d = new Date(s);
+    for (let i = 0; i < nDays; i++) {
+      dates.push(new Date(d));
+      d.setDate(d.getDate() + 1);
+    }
+  }
+  return dates;
+}
+
+// Mini calendar that highlights delivery dates
+function DeliveryCalendar({ dates }) {
+  if (!dates || dates.length === 0) return null;
+
+  // Determine month range to show
+  const months = [];
+  const seen = new Set();
+  dates.forEach(d => {
+    const key = `${d.getFullYear()}-${d.getMonth()}`;
+    if (!seen.has(key)) { seen.add(key); months.push({ year: d.getFullYear(), month: d.getMonth() }); }
+  });
+
+  const deliverySet = new Set(dates.map(d => d.toDateString()));
+
+  return (
+    <div style={{ marginTop: '2rem', marginBottom: '1.5rem' }}>
+      <p className="subscription-label" style={{ marginBottom: '0.75rem' }}>📅 Delivery Calendar Preview</p>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1.25rem' }}>
+        {months.map(({ year, month }) => {
+          const firstDay = new Date(year, month, 1).getDay();
+          const daysInMonth = new Date(year, month + 1, 0).getDate();
+          const cells = [];
+          for (let i = 0; i < firstDay; i++) cells.push(null);
+          for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+
+          return (
+            <div key={`${year}-${month}`} style={{ background: '#fff', border: '1px solid rgba(201,168,106,0.3)', borderRadius: 14, padding: '1rem 1.1rem', minWidth: 220, flex: '1 1 220px', maxWidth: 280 }}>
+              <div style={{ textAlign: 'center', fontFamily: 'Playfair Display, serif', fontWeight: 700, color: 'var(--color-primary)', marginBottom: '0.75rem', fontSize: '0.95rem' }}>
+                {new Date(year, month).toLocaleString('en-IN', { month: 'long', year: 'numeric' })}
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '2px', textAlign: 'center' }}>
+                {['S','M','T','W','T','F','S'].map((d, i) => (
+                  <div key={i} style={{ fontSize: '0.65rem', fontWeight: 700, color: 'var(--color-text-muted)', paddingBottom: '4px' }}>{d}</div>
+                ))}
+                {cells.map((day, i) => {
+                  if (!day) return <div key={i} />;
+                  const dateKey = new Date(year, month, day).toDateString();
+                  const isDelivery = deliverySet.has(dateKey);
+                  return (
+                    <div key={i} style={{
+                      width: '100%', aspectRatio: '1', borderRadius: '50%',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: '0.7rem', fontWeight: isDelivery ? 700 : 400,
+                      background: isDelivery ? 'var(--color-primary)' : 'transparent',
+                      color: isDelivery ? '#FAF7F2' : 'var(--color-text)',
+                      boxShadow: isDelivery ? '0 2px 6px rgba(46,74,46,0.25)' : 'none',
+                      cursor: 'default',
+                    }}>{day}</div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      <p style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', marginTop: '0.5rem' }}>🌸 Green = delivery day</p>
+    </div>
+  );
+}
 
 export default function Subscriptions() {
   const [schedule, setSchedule] = useState('monthly');
   const [nDays, setNDays] = useState(10);
+  const [weekday, setWeekday] = useState(1); // Monday default
   const [product, setProduct] = useState(null);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -97,11 +196,9 @@ export default function Subscriptions() {
   const calculatePrice = () => {
     if (!product) return 0;
     const dailyRate = product.price_per_unit || product.our_price || 0;
-    const selectedPlan = PLANS.find(p => p.id === schedule);
-    if (schedule === 'n_days') {
-      return dailyRate * nDays;
-    }
-    return dailyRate * selectedPlan.days;
+    const plan = PLANS.find(p => p.id === schedule);
+    if (schedule === 'n_days') return dailyRate * nDays;
+    return dailyRate * (plan.deliveries ?? plan.days ?? 1);
   };
 
   const loadRazorpayScript = () => {
@@ -174,6 +271,7 @@ export default function Subscriptions() {
           product_name: product.name,
           schedule,
           n_days: schedule === 'n_days' ? nDays : undefined,
+          weekday: schedule === 'weekly' ? weekday : undefined,
           price_per_day: product.price_per_unit || product.our_price,
           total: totalPrice,
           address: fullAddress
@@ -348,12 +446,35 @@ export default function Subscriptions() {
                     <div className="plan-desc">{p.desc}</div>
                     {!p.custom && product && (
                       <div className="plan-price">
-                        ₹{(product.price_per_unit || product.our_price || 0) * p.days}
+                        ₹{(product.price_per_unit || product.our_price || 0) * (p.deliveries ?? p.days)}
                       </div>
                     )}
                   </motion.button>
                 ))}
               </div>
+
+              {/* Weekly day picker */}
+              {schedule === 'weekly' && (
+                <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
+                  style={{ marginBottom: '1.5rem', padding: '1.25rem 1.5rem', background: '#fff', border: '1px dashed rgba(201,168,106,0.5)', borderRadius: 14 }}>
+                  <label className="subscription-label" style={{ marginBottom: '0.75rem', fontSize: '1rem' }}>Choose delivery day of the week</label>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                    {WEEKDAYS.map((d, i) => (
+                      <button key={i} onClick={() => setWeekday(i)}
+                        style={{
+                          padding: '0.4rem 0.9rem', borderRadius: 100, border: '1.5px solid',
+                          borderColor: weekday === i ? 'var(--color-primary)' : 'rgba(201,168,106,0.4)',
+                          background: weekday === i ? 'var(--color-primary)' : '#fff',
+                          color: weekday === i ? '#FAF7F2' : 'var(--color-primary)',
+                          fontFamily: 'Lato, sans-serif', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer'
+                        }}>{d}</button>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+
+              {/* Delivery Calendar Preview */}
+              <DeliveryCalendar dates={getDeliveryDates(schedule, weekday, nDays)} />
 
               {schedule === 'n_days' && (
                 <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} className="custom-days-wrapper">
@@ -375,19 +496,19 @@ export default function Subscriptions() {
               <div style={{ borderTop: '1px dashed rgba(201,168,106,0.5)', paddingTop: '2.5rem', textAlign: 'center' }}>
                 <div style={{ marginBottom: '2rem' }}>
                   <p style={{ fontFamily: 'Playfair Display, serif', fontSize: '1.2rem', color: 'var(--color-primary)', marginBottom: '0.5rem' }}>
-                    <strong style={{ color: 'var(--color-accent)' }}>{product?.name}</strong> delivered{' '}
+                    <strong style={{ color: 'var(--color-accent)' }}>{product?.name}</strong> ·{' '}
                     <strong>{
-                      schedule === 'alternate' ? 'every 2 days for 30 days' : 
-                      schedule === 'weekly' ? 'every 7 days' : 
-                      schedule === 'monthly' ? 'every 30 days' : 
-                      `daily for ${nDays} days`
+                      schedule === 'alternate' ? '15 deliveries over 30 days' :
+                      schedule === 'weekly' ? `Every ${WEEKDAYS[weekday]}, 4 times this month` :
+                      schedule === 'monthly' ? '30 daily deliveries for a month' :
+                      `${nDays} daily deliveries`
                     }</strong>
                   </p>
                   <div style={{ fontSize: '2rem', fontWeight: 700, color: 'var(--color-primary)', marginTop: '1rem' }}>
                     Total: ₹{totalPrice}
                   </div>
                   <div style={{ fontSize: '0.9rem', color: 'var(--color-text-muted)', marginTop: '0.5rem' }}>
-                    ₹{product?.price_per_unit || product?.our_price}/day × {schedule === 'n_days' ? nDays : PLANS.find(p => p.id === schedule)?.days} days
+                    ₹{product?.price_per_unit || product?.our_price} × {schedule === 'n_days' ? nDays : PLANS.find(p => p.id === schedule)?.deliveries} deliveries
                   </div>
                 </div>
                 <motion.button whileHover={{ y: -2 }} whileTap={{ scale: 0.98 }} className="btn-primary" onClick={handleProceedToAddress}

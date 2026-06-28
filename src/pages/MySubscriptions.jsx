@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Repeat, Flower2 } from "lucide-react";
+import { Repeat, Flower2, ChevronDown, ChevronUp } from "lucide-react";
 import { useAuth } from "../store/authStore";
 import { useNavigate } from "react-router-dom";
 import { API } from "../config/api";
@@ -12,6 +12,112 @@ const STATUS_C = {
   Cancelled: { bg: 'rgba(0,0,0,0.05)', color: '#666', border: 'rgba(0,0,0,0.1)' },
   Inactive: { bg: 'rgba(220,38,38,0.05)', color: '#dc2626', border: 'rgba(220,38,38,0.1)' }
 };
+
+function getDeliveryDates(sub) {
+  if (!sub.start_date) return [];
+  const start = new Date(sub.start_date);
+  start.setHours(0, 0, 0, 0);
+  const end = sub.end_date ? new Date(sub.end_date) : null;
+  const s = (sub.schedule || '').toLowerCase();
+  const dates = [];
+
+  if (s.includes('alternate')) {
+    let d = new Date(start);
+    for (let i = 0; i < 15; i++) {
+      if (end && d > end) break;
+      dates.push(new Date(d));
+      d.setDate(d.getDate() + 2);
+    }
+  } else if (s.includes('weekly')) {
+    const wd = sub.weekday ?? start.getDay();
+    let d = new Date(start);
+    while (d.getDay() !== wd) d.setDate(d.getDate() + 1);
+    for (let i = 0; i < 4; i++) {
+      if (end && d > end) break;
+      dates.push(new Date(d));
+      d.setDate(d.getDate() + 7);
+    }
+  } else if (s.includes('monthly') || s.includes('month')) {
+    let d = new Date(start);
+    for (let i = 0; i < 30; i++) {
+      if (end && d > end) break;
+      dates.push(new Date(d));
+      d.setDate(d.getDate() + 1);
+    }
+  } else {
+    // daily / n_days
+    let d = new Date(start);
+    while (!end || d <= end) {
+      dates.push(new Date(d));
+      d.setDate(d.getDate() + 1);
+      if (dates.length > 90) break;
+    }
+  }
+  return dates;
+}
+
+function SubscriptionCalendar({ sub }) {
+  const [open, setOpen] = useState(false);
+  const dates = getDeliveryDates(sub);
+  if (!dates.length) return null;
+
+  const months = [];
+  const seen = new Set();
+  dates.forEach(d => {
+    const key = `${d.getFullYear()}-${d.getMonth()}`;
+    if (!seen.has(key)) { seen.add(key); months.push({ year: d.getFullYear(), month: d.getMonth() }); }
+  });
+  const deliverySet = new Set(dates.map(d => d.toDateString()));
+  const today = new Date().toDateString();
+
+  return (
+    <div style={{ width: '100%', marginTop: '0.75rem', borderTop: '1px dashed rgba(201,168,106,0.3)', paddingTop: '0.75rem' }}>
+      <button onClick={() => setOpen(v => !v)}
+        style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--color-accent)', fontFamily: 'Playfair Display, serif', fontWeight: 600, fontSize: '0.9rem', padding: 0 }}>
+        📅 View Delivery Dates {open ? <ChevronUp size={16}/> : <ChevronDown size={16}/>}
+      </button>
+      {open && (
+        <div style={{ marginTop: '0.75rem', display: 'flex', flexWrap: 'wrap', gap: '1rem' }}>
+          {months.map(({ year, month }) => {
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const cells = [];
+            for (let i = 0; i < firstDay; i++) cells.push(null);
+            for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+            return (
+              <div key={`${year}-${month}`} style={{ background: '#FAF7F2', border: '1px solid rgba(201,168,106,0.25)', borderRadius: 12, padding: '0.75rem', minWidth: 200, flex: '1 1 200px', maxWidth: 260 }}>
+                <div style={{ textAlign: 'center', fontFamily: 'Playfair Display, serif', fontWeight: 700, color: 'var(--color-primary)', marginBottom: '0.5rem', fontSize: '0.85rem' }}>
+                  {new Date(year, month).toLocaleString('en-IN', { month: 'long', year: 'numeric' })}
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '2px', textAlign: 'center' }}>
+                  {['S','M','T','W','T','F','S'].map((d, i) => (
+                    <div key={i} style={{ fontSize: '0.6rem', fontWeight: 700, color: 'var(--color-text-muted)', paddingBottom: 3 }}>{d}</div>
+                  ))}
+                  {cells.map((day, i) => {
+                    if (!day) return <div key={i} />;
+                    const dk = new Date(year, month, day).toDateString();
+                    const isDelivery = deliverySet.has(dk);
+                    const isToday = dk === today;
+                    return (
+                      <div key={i} title={isDelivery ? '🌸 Delivery' : ''} style={{
+                        aspectRatio: '1', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: '0.62rem', fontWeight: isDelivery ? 700 : 400,
+                        background: isDelivery ? 'var(--color-primary)' : isToday ? 'rgba(201,168,106,0.2)' : 'transparent',
+                        color: isDelivery ? '#FAF7F2' : isToday ? 'var(--color-accent)' : 'var(--color-text)',
+                        outline: isToday && !isDelivery ? '1.5px solid var(--color-accent)' : 'none',
+                      }}>{day}</div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+          <p style={{ width: '100%', fontSize: '0.75rem', color: 'var(--color-text-muted)', margin: '0.25rem 0 0' }}>🌸 Green = delivery · Ring = today</p>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function MySubscriptions() {
   const { token } = useAuth();
@@ -351,35 +457,38 @@ export default function MySubscriptions() {
               const expired = isSubscriptionExpired(s.end_date, s.status);
               return (
                 <motion.div key={s.id} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }}
-                  style={{ background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(10px)', padding: '1.5rem', borderRadius: '16px', border: '1px solid rgba(201,168,106,0.3)', boxShadow: '0 8px 30px rgba(46,74,46,0.04)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-                  <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
-                      <p style={{ fontFamily: 'Playfair Display, serif', fontWeight: 700, color: 'var(--color-primary)', fontSize: '1.1rem', margin: 0 }}>{s.product_name}</p>
-                      <span style={{ padding: '0.25rem 0.75rem', borderRadius: 100, backgroundColor: sc.bg, color: sc.color, border: `1px solid ${sc.border}`, fontSize: '0.8rem', fontWeight: 600 }}>{s.status}</span>
+                  style={{ background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(10px)', padding: '1.5rem', borderRadius: '16px', border: '1px solid rgba(201,168,106,0.3)', boxShadow: '0 8px 30px rgba(46,74,46,0.04)', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+                        <p style={{ fontFamily: 'Playfair Display, serif', fontWeight: 700, color: 'var(--color-primary)', fontSize: '1.1rem', margin: 0 }}>{s.product_name}</p>
+                        <span style={{ padding: '0.25rem 0.75rem', borderRadius: 100, backgroundColor: sc.bg, color: sc.color, border: `1px solid ${sc.border}`, fontSize: '0.8rem', fontWeight: 600 }}>{s.status}</span>
+                      </div>
+                      <p style={{ color: 'var(--color-text-muted)', fontSize: '0.88rem', margin: '0 0 0.25rem' }}>🔁 {s.schedule}</p>
+                      <p style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem', margin: 0 }}>
+                        Next Delivery: {s.status === 'Paused' ? (
+                          <span style={{ color: 'var(--color-accent)', fontWeight: 600 }}>Paused</span>
+                        ) : expired ? (
+                          <span style={{ color: '#dc2626', fontWeight: 600 }}>Expired</span>
+                        ) : (
+                          formatDate(s.next_delivery)
+                        )}
+                      </p>
                     </div>
-                    <p style={{ color: 'var(--color-text-muted)', fontSize: '0.88rem', margin: '0 0 0.25rem' }}>🔁 {s.schedule}</p>
-                    <p style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem', margin: 0 }}>
-                      Next Delivery: {s.status === 'Paused' ? (
-                        <span style={{ color: 'var(--color-accent)', fontWeight: 600 }}>Paused</span>
-                      ) : expired ? (
-                        <span style={{ color: '#dc2626', fontWeight: 600 }}>Expired</span>
-                      ) : (
-                        formatDate(s.next_delivery)
+                    <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
+                      <button onClick={() => handlePrintSubscription(s)} style={{ background: 'none', border: '1px solid var(--color-primary)', color: 'var(--color-primary)', padding: '0.4rem 1rem', borderRadius: 'var(--radius-md)', cursor: 'pointer', fontFamily: 'var(--font-primary)', fontSize: '0.85rem' }}>Print</button>
+                      {s.status === 'Active' && !expired && (
+                        <button onClick={() => pause(s.id)} style={{ background: 'none', border: '1px solid var(--color-accent)', color: 'var(--color-accent)', padding: '0.4rem 1rem', borderRadius: 'var(--radius-md)', cursor: 'pointer', fontFamily: 'var(--font-primary)', fontSize: '0.85rem' }}>Pause</button>
                       )}
-                    </p>
+                      {s.status === 'Paused' && !expired && (
+                        <button onClick={() => resume(s.id)} style={{ background: 'var(--color-accent)', border: '1px solid var(--color-accent)', color: 'white', padding: '0.4rem 1rem', borderRadius: 'var(--radius-md)', cursor: 'pointer', fontFamily: 'var(--font-primary)', fontSize: '0.85rem', fontWeight: 600 }}>Resume</button>
+                      )}
+                      {s.status !== 'Cancelled' && s.status !== 'Inactive' && !expired && (
+                        <button onClick={() => cancel(s.id)} style={{ background: 'none', border: '1px solid #dc2626', color: '#dc2626', padding: '0.4rem 1rem', borderRadius: 'var(--radius-md)', cursor: 'pointer', fontFamily: 'var(--font-primary)', fontSize: '0.85rem' }}>Cancel</button>
+                      )}
+                    </div>
                   </div>
-                  <div style={{ display: 'flex', gap: '0.5rem' }}>
-                    <button onClick={() => handlePrintSubscription(s)} style={{ background: 'none', border: '1px solid var(--color-primary)', color: 'var(--color-primary)', padding: '0.4rem 1rem', borderRadius: 'var(--radius-md)', cursor: 'pointer', fontFamily: 'var(--font-primary)', fontSize: '0.85rem' }}>Print</button>
-                    {s.status === 'Active' && !expired && (
-                      <button onClick={() => pause(s.id)} style={{ background: 'none', border: '1px solid var(--color-accent)', color: 'var(--color-accent)', padding: '0.4rem 1rem', borderRadius: 'var(--radius-md)', cursor: 'pointer', fontFamily: 'var(--font-primary)', fontSize: '0.85rem' }}>Pause</button>
-                    )}
-                    {s.status === 'Paused' && !expired && (
-                      <button onClick={() => resume(s.id)} style={{ background: 'var(--color-accent)', border: '1px solid var(--color-accent)', color: 'white', padding: '0.4rem 1rem', borderRadius: 'var(--radius-md)', cursor: 'pointer', fontFamily: 'var(--font-primary)', fontSize: '0.85rem', fontWeight: 600 }}>Resume</button>
-                    )}
-                    {s.status !== 'Cancelled' && s.status !== 'Inactive' && !expired && (
-                      <button onClick={() => cancel(s.id)} style={{ background: 'none', border: '1px solid #dc2626', color: '#dc2626', padding: '0.4rem 1rem', borderRadius: 'var(--radius-md)', cursor: 'pointer', fontFamily: 'var(--font-primary)', fontSize: '0.85rem' }}>Cancel</button>
-                    )}
-                  </div>
+                  <SubscriptionCalendar sub={s} />
                 </motion.div>
               );
             })}
