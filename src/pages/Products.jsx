@@ -213,7 +213,7 @@ export default function Products() {
             ) : (
               <div className="prod-empty">
                 <span className="prod-empty-icon">🌸</span>
-                <h3>No flowers found</h3>
+                <h3>Coming soon 🔜</h3>
                 <p>Try adjusting your search or browse a different category.</p>
                 <button className="btn-primary" onClick={() => { setSearchQuery(""); setActive("all"); }} style={{ marginTop: '1rem' }}>
                   View All Products
