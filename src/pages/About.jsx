@@ -9,7 +9,7 @@ const VALUES = [
   { icon: "🎁", title: "Gift-Ready Always",  desc: "Kraft paper wrapping, satin ribbons and a personalised message card on every single order." },
   { icon: "🚚", title: "On-Time Delivery",   desc: "We promise same-day delivery for orders placed before 10 AM — fresh at your doorstep, always." },
   { icon: "🔁", title: "Flexible Plans",     desc: "Alternate days, weekly, monthly or your own custom interval — flowers on your terms." },
-  { icon: "💚", title: "Eco Conscious",      desc: "Biodegradable packaging, no plastics. We love the earth as much as we love flowers." },
+  { icon: "💚", title: "Sorted & Graded",    desc: "We sort and grade every flower to ensure the highest quality on your doorstep." },
 ];
 
 const TEAM = [
@@ -68,11 +68,14 @@ export default function About() {
             <div className="about-divider" />
             <p className="about-body">
               Sowgandhika was born in 2025 from a deeply personal love for flowers — their fragrance, their emotion,
-              their ability to transform any moment into something sacred. What began as a small pooja flower delivery
-              has grown into Hyderabad's most trusted artisanal flower studio.
+              their ability to transform any moment into something sacred.
             </p>
             <p className="about-body">
-              We believe every bloom has a story. Whether it's the marigold that adorns your morning pooja, the jasmine
+              Many businesses are born either out of a need or a solution for a problem, and sowgandhika fresh flowers is no exception. Everyday, we perform our pooja with devotion and purity and naturally we want to offer only the freshest flowers to God. With that thought in mind, sowgandhika fresh flowers was started - to bring fresh, quality flowers right to your doorstep with free home delivery, making your daily worship more convenient and meaningful.
+            </p>
+
+            <p className="about-body">
+              We believe every bloom has a story. Whether it's the jasmine that adorns your morning pooja, the jasmine
               Poola Jada braided into a bride's hair, or the rose bouquet that says "I love you" — we handle every
               flower with the reverence it deserves.
             </p>
