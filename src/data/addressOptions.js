@@ -1,5 +1,6 @@
 export const BUILDINGS = [
-  "Pragathi's Raghupathi county"
+  "Pragathi's Raghupathi county",
+  "Lohitha Residency"
 ];
 
 export const PINCODES = [
