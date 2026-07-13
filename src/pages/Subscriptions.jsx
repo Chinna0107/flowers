@@ -20,7 +20,7 @@ const PLANS = [
 ];
 
 // Returns array of Date objects for delivery dates starting from `start`
-function getDeliveryDates(schedule, weekday, nDays, start = new Date()) {
+function getDeliveryDates(schedule, weekday, nDays, start = new Date(Date.now() + 86400000)) {
   const dates = [];
   const s = new Date(start);
   s.setHours(0, 0, 0, 0);
@@ -480,8 +480,8 @@ export default function Subscriptions() {
                 <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} className="custom-days-wrapper">
                   <label className="subscription-label" style={{ marginBottom: '1rem' }}>How many days?</label>
                   <div className="custom-days-controls">
-                    <button onClick={() => setNDays(Math.max(1, nDays - 1))} className="btn-counter">−</button>
-                    <input type="number" min="1" max="90" value={nDays} onChange={e => setNDays(Math.min(90, Math.max(1, +e.target.value)))}
+                    <button onClick={() => setNDays(Math.max(10, nDays - 1))} className="btn-counter">−</button>
+                    <input type="number" min="10" max="90" value={nDays} onChange={e => setNDays(Math.min(90, Math.max(10, +e.target.value)))}
                       className="input-counter" />
                     <button onClick={() => setNDays(Math.min(90, nDays + 1))} className="btn-counter">+</button>
                   </div>

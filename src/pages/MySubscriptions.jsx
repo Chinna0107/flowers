@@ -123,16 +123,28 @@ export default function MySubscriptions() {
   const { token } = useAuth();
   const navigate = useNavigate();
   const [subs, setSubs] = useState([]);
+  const [products, setProducts] = useState({});
   const [loading, setLoading] = useState(true);
 
   const load = () => {
     const storedAuth = localStorage.getItem('auth');
     const activeToken = token || (storedAuth ? JSON.parse(storedAuth)?.token : null);
     if (!activeToken) { navigate('/auth'); return; }
-    fetch(`${API}/subscriptions/my`, { headers: { Authorization: `Bearer ${activeToken}` } })
-      .then(r => r.json())
-      .then(d => setSubs(Array.isArray(d) ? d : []))
-      .finally(() => setLoading(false));
+    
+    Promise.all([
+      fetch(`${API}/subscriptions/my`, { headers: { Authorization: `Bearer ${activeToken}` } }).then(r => r.json()),
+      fetch(`${API}/products`).then(r => r.json())
+    ])
+    .then(([subsData, prodsData]) => {
+      setSubs(Array.isArray(subsData) ? subsData : []);
+      const pMap = {};
+      if (Array.isArray(prodsData)) {
+        prodsData.forEach(p => pMap[p.name] = p);
+      }
+      setProducts(pMap);
+    })
+    .catch(err => console.error(err))
+    .finally(() => setLoading(false));
   };
 
   const formatDate = (dateStr) => {
@@ -457,38 +469,76 @@ export default function MySubscriptions() {
               const expired = isSubscriptionExpired(s.end_date, s.status);
               return (
                 <motion.div key={s.id} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }}
-                  style={{ background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(10px)', padding: '1.5rem', borderRadius: '16px', border: '1px solid rgba(201,168,106,0.3)', boxShadow: '0 8px 30px rgba(46,74,46,0.04)', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
-                    <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
-                        <p style={{ fontFamily: 'Playfair Display, serif', fontWeight: 700, color: 'var(--color-primary)', fontSize: '1.1rem', margin: 0 }}>{s.product_name}</p>
-                        <span style={{ padding: '0.25rem 0.75rem', borderRadius: 100, backgroundColor: sc.bg, color: sc.color, border: `1px solid ${sc.border}`, fontSize: '0.8rem', fontWeight: 600 }}>{s.status}</span>
-                      </div>
-                      <p style={{ color: 'var(--color-text-muted)', fontSize: '0.88rem', margin: '0 0 0.25rem' }}>🔁 {s.schedule}</p>
-                      <p style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem', margin: 0 }}>
-                        Next Delivery: {s.status === 'Paused' ? (
-                          <span style={{ color: 'var(--color-accent)', fontWeight: 600 }}>Paused</span>
-                        ) : expired ? (
-                          <span style={{ color: '#dc2626', fontWeight: 600 }}>Expired</span>
-                        ) : (
-                          formatDate(s.next_delivery)
-                        )}
-                      </p>
+                  style={{ 
+                    background: 'linear-gradient(145deg, #ffffff, #fdfbf7)', 
+                    padding: '1.5rem', 
+                    borderRadius: '24px', 
+                    border: '1px solid rgba(201,168,106,0.3)', 
+                    boxShadow: '0 12px 35px rgba(46,74,46,0.05), inset 0 1px 0 #ffffff', 
+                    display: 'flex', 
+                    flexDirection: 'column', 
+                    gap: '1rem',
+                    position: 'relative',
+                    overflow: 'hidden'
+                  }}>
+                  <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                    {/* Product Image */}
+                    <div style={{ width: '110px', height: '110px', borderRadius: '18px', overflow: 'hidden', flexShrink: 0, boxShadow: '0 8px 20px rgba(0,0,0,0.08)', background: '#f5f5f5' }}>
+                      <img src={products[s.product_name]?.img || 'https://res.cloudinary.com/dwgqfg2xc/image/upload/v1782584507/WhatsApp_Image_2026-06-27_at_09.33.56_umdbmp.jpg'} alt={s.product_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     </div>
-                    <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
-                      <button onClick={() => handlePrintSubscription(s)} style={{ background: 'none', border: '1px solid var(--color-primary)', color: 'var(--color-primary)', padding: '0.4rem 1rem', borderRadius: 'var(--radius-md)', cursor: 'pointer', fontFamily: 'var(--font-primary)', fontSize: '0.85rem' }}>Print</button>
+
+                    {/* Details */}
+                    <div style={{ flex: 1, minWidth: '220px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+                        <h3 style={{ fontFamily: 'Playfair Display, serif', fontWeight: 800, color: 'var(--color-primary)', fontSize: '1.5rem', margin: 0 }}>{s.product_name}</h3>
+                        <span style={{ padding: '0.3rem 0.8rem', borderRadius: 100, backgroundColor: sc.bg, color: sc.color, border: `1px solid ${sc.border}`, fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{s.status}</span>
+                      </div>
+                      
+                      <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', marginTop: '0.75rem' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.1rem' }}>
+                          <span style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 700 }}>Schedule</span>
+                          <span style={{ color: 'var(--color-text)', fontSize: '0.95rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.3rem' }}><Repeat size={14} color="var(--color-accent)"/> {s.schedule}</span>
+                        </div>
+                        
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.1rem' }}>
+                          <span style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 700 }}>Next Delivery</span>
+                          <span style={{ color: 'var(--color-text)', fontSize: '0.95rem', fontWeight: 600 }}>
+                            {s.status === 'Paused' ? (
+                              <span style={{ color: 'var(--color-accent)' }}>Paused</span>
+                            ) : expired ? (
+                              <span style={{ color: '#dc2626' }}>Expired</span>
+                            ) : (
+                              formatDate(s.next_delivery)
+                            )}
+                          </span>
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.1rem' }}>
+                          <span style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 700 }}>Price/Day</span>
+                          <span style={{ color: 'var(--color-text)', fontSize: '0.95rem', fontWeight: 700, color: 'var(--color-primary)' }}>₹{s.price_per_day || '—'}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0, flexWrap: 'wrap' }}>
+                      <button onClick={() => handlePrintSubscription(s)} style={{ background: '#fff', border: '1px solid rgba(201,168,106,0.6)', color: 'var(--color-primary)', padding: '0.5rem 1.2rem', borderRadius: '100px', cursor: 'pointer', fontFamily: 'var(--font-primary)', fontSize: '0.85rem', fontWeight: 700, transition: 'all 0.2s', boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }} onMouseOver={e=>e.target.style.background='var(--color-bg)'} onMouseOut={e=>e.target.style.background='#fff'}>Print</button>
+                      
                       {s.status === 'Active' && !expired && (
-                        <button onClick={() => pause(s.id)} style={{ background: 'none', border: '1px solid var(--color-accent)', color: 'var(--color-accent)', padding: '0.4rem 1rem', borderRadius: 'var(--radius-md)', cursor: 'pointer', fontFamily: 'var(--font-primary)', fontSize: '0.85rem' }}>Pause</button>
+                        <button onClick={() => pause(s.id)} style={{ background: '#fff', border: '1px solid var(--color-accent)', color: 'var(--color-accent)', padding: '0.5rem 1.2rem', borderRadius: '100px', cursor: 'pointer', fontFamily: 'var(--font-primary)', fontSize: '0.85rem', fontWeight: 700, transition: 'all 0.2s', boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }} onMouseOver={e=>{e.target.style.background='var(--color-accent)'; e.target.style.color='#fff'}} onMouseOut={e=>{e.target.style.background='#fff'; e.target.style.color='var(--color-accent)'}}>Pause</button>
                       )}
+                      
                       {s.status === 'Paused' && !expired && (
-                        <button onClick={() => resume(s.id)} style={{ background: 'var(--color-accent)', border: '1px solid var(--color-accent)', color: 'white', padding: '0.4rem 1rem', borderRadius: 'var(--radius-md)', cursor: 'pointer', fontFamily: 'var(--font-primary)', fontSize: '0.85rem', fontWeight: 600 }}>Resume</button>
+                        <button onClick={() => resume(s.id)} style={{ background: 'var(--color-accent)', border: '1px solid var(--color-accent)', color: 'white', padding: '0.5rem 1.2rem', borderRadius: '100px', cursor: 'pointer', fontFamily: 'var(--font-primary)', fontSize: '0.85rem', fontWeight: 700, transition: 'all 0.2s', boxShadow: '0 4px 12px rgba(201,168,106,0.3)' }} onMouseOver={e=>e.target.style.opacity='0.9'} onMouseOut={e=>e.target.style.opacity='1'}>Resume</button>
                       )}
-                      {s.status !== 'Cancelled' && s.status !== 'Inactive' && !expired && (
-                        <button onClick={() => cancel(s.id)} style={{ background: 'none', border: '1px solid #dc2626', color: '#dc2626', padding: '0.4rem 1rem', borderRadius: 'var(--radius-md)', cursor: 'pointer', fontFamily: 'var(--font-primary)', fontSize: '0.85rem' }}>Cancel</button>
-                      )}
+                      
+
                     </div>
                   </div>
-                  <SubscriptionCalendar sub={s} />
+                  
+                  <div style={{ borderTop: '1px solid rgba(201,168,106,0.15)', paddingTop: '0.2rem' }}>
+                    <SubscriptionCalendar sub={s} />
+                  </div>
                 </motion.div>
               );
             })}

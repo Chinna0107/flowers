@@ -8,6 +8,21 @@ export default function AdminSubscriptions() {
   const [subs, setSubs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('All');
+  const [aptFilter, setAptFilter] = useState('All');
+
+  const extractApartment = (addrStr) => {
+    if (!addrStr) return '—';
+    const cleanAddr = addrStr.replace(/\(.*?\)/g, '').trim();
+    const parts = cleanAddr.split(',').map(p => p.trim()).filter(p => p);
+    if (parts.length >= 2) return parts[parts.length - 2];
+    return '—';
+  };
+
+  const getMobile = (s) => {
+    const addr = s.customer_address || s.address || '';
+    const telMatch = addr.match(/Tel:\s*([^,)]+)/i);
+    return telMatch ? telMatch[1].trim() : s.customer_phone || s.phone || '—';
+  };
 
   const formatDate = (dateStr) => {
     if (!dateStr) return '—';
@@ -30,9 +45,27 @@ export default function AdminSubscriptions() {
       .finally(() => setLoading(false));
   };
 
+  const handleMarkDelivered = async (id) => {
+    await fetch(`${API}/subscriptions/${id}/mark-delivered`, {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    load();
+  };
+
+  const todayStr = new Date().toISOString().split('T')[0];
+  const tomorrowDate = new Date();
+  tomorrowDate.setDate(tomorrowDate.getDate() + 1);
+  const tomorrowStr = tomorrowDate.toISOString().split('T')[0];
+
+  const uniqueApts = ['All', ...new Set(subs.map(s => extractApartment(s.customer_address || s.address)).filter(a => a !== '—'))];
+
   const filteredSubs = subs.filter(s => {
+    if (aptFilter !== 'All' && extractApartment(s.customer_address || s.address) !== aptFilter) return false;
     if (filter === 'All') return true;
     const expired = isSubscriptionExpired(s.end_date, s.status);
+    if (filter === 'Today') return s.status === 'Active' && !expired && s.next_delivery && s.next_delivery.split('T')[0] === todayStr;
+    if (filter === 'Tomorrow') return s.status === 'Active' && !expired && s.next_delivery && s.next_delivery.split('T')[0] === tomorrowStr;
     if (filter === 'Expired') return expired && s.status !== 'Paused';
     if (filter === 'Active') return s.status === 'Active' && !expired;
     return s.status === filter;
@@ -159,6 +192,95 @@ export default function AdminSubscriptions() {
     </span>;
   };
 
+  const handleExportCSV = () => {
+    let csv = 'ID,Customer,Email,Mobile,Apartment,Product,Schedule,Timing,Status,Start Date,End Date,Next Delivery,Price/Day\n';
+    filteredSubs.forEach(s => {
+      const apt = extractApartment(s.customer_address || s.address);
+      const mobile = getMobile(s);
+      const expired = isSubscriptionExpired(s.end_date, s.status);
+      const nextDelivery = s.status === 'Paused' ? 'Paused' : expired ? 'Expired' : formatDate(s.next_delivery);
+      
+      const addr = s.customer_address || s.address || '';
+      const match = addr.match(/Time:\\s*([^,)]+)/i);
+      const timing = match ? match[1].trim() : '—';
+      
+      const row = [
+        s.id,
+        `"${s.customer_name || ''}"`,
+        `"${s.customer_email || ''}"`,
+        `"${mobile}"`,
+        `"${apt}"`,
+        `"${s.product_name || ''}"`,
+        `"${s.schedule || ''}"`,
+        `"${timing}"`,
+        s.status,
+        formatDate(s.start_date),
+        formatDate(s.end_date),
+        nextDelivery,
+        s.price_per_day || '—'
+      ].join(',');
+      csv += row + '\\n';
+    });
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `subscriptions_${new Date().getTime()}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
+  const handleExportPDF = () => {
+    const printWindow = window.open('', '_blank', 'width=1000,height=800');
+    const html = `
+      <html>
+        <head>
+          <title>Subscriptions Report</title>
+          <style>
+            body { font-family: sans-serif; margin: 20px; }
+            table { width: 100%; border-collapse: collapse; }
+            th, td { border: 1px solid #ccc; padding: 8px; text-align: left; font-size: 12px; }
+            th { background-color: #f4f4f4; }
+            @media print { .no-print { display: none; } }
+          </style>
+        </head>
+        <body>
+          <div class="no-print" style="margin-bottom: 20px;">
+            <button onclick="window.print()" style="padding: 10px 20px; background: #2E4A2E; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">Print / Save as PDF</button>
+          </div>
+          <h2>Subscriptions Report (Status: ${filter} | Apt: ${aptFilter})</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th><th>Customer</th><th>Mobile</th><th>Apartment</th><th>Product</th><th>Schedule</th><th>Next Delivery</th><th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${filteredSubs.map(s => {
+                const apt = extractApartment(s.customer_address || s.address);
+                const mobile = getMobile(s);
+                const expired = isSubscriptionExpired(s.end_date, s.status);
+                const nextDelivery = s.status === 'Paused' ? 'Paused' : expired ? 'Expired' : formatDate(s.next_delivery);
+                return `<tr>
+                  <td>${s.id}</td>
+                  <td>${s.customer_name}</td>
+                  <td>${mobile}</td>
+                  <td>${apt}</td>
+                  <td>${s.product_name}</td>
+                  <td>${s.schedule}</td>
+                  <td>${nextDelivery}</td>
+                  <td>${s.status}</td>
+                </tr>`;
+              }).join('')}
+            </tbody>
+          </table>
+        </body>
+      </html>
+    `;
+    printWindow.document.write(html);
+    printWindow.document.close();
+  };
+
   return (
     <div>
       <div style={{ marginBottom: '2rem' }}>
@@ -168,11 +290,29 @@ export default function AdminSubscriptions() {
         </p>
       </div>
 
-      <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
-        {['All', 'Active', 'Paused', 'Cancelled', 'Expired'].map(f => (
-          <button key={f} onClick={() => setFilter(f)} className={filter === f ? 'btn-primary' : 'btn-outline'}
-            style={{ padding: '0.35rem 1rem', fontSize: '0.85rem' }}>{f}</button>
-        ))}
+      <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
+          {['All', 'Active', 'Today', 'Tomorrow', 'Paused', 'Cancelled', 'Expired'].map(f => (
+            <button key={f} onClick={() => setFilter(f)} className={filter === f ? 'btn-primary' : 'btn-outline'}
+              style={{ padding: '0.35rem 1rem', fontSize: '0.85rem' }}>
+              {f === 'Today' ? '🚚 Today' : f === 'Tomorrow' ? '📋 Tomorrow' : f}
+            </button>
+          ))}
+          <div style={{ width: '1px', height: '24px', background: 'rgba(201,168,106,0.3)', margin: '0 0.5rem' }}></div>
+          <select value={aptFilter} onChange={(e) => setAptFilter(e.target.value)} className="btn-outline" style={{ padding: '0.35rem 1rem', fontSize: '0.85rem', background: 'transparent', outline: 'none' }}>
+            {uniqueApts.map(apt => (
+              <option key={apt} value={apt}>{apt}</option>
+            ))}
+          </select>
+        </div>
+        <div style={{ display: 'flex', gap: '0.75rem' }}>
+          <button onClick={handleExportPDF} className="btn-outline" style={{ padding: '0.35rem 1rem', fontSize: '0.85rem', borderColor: '#2E4A2E', color: '#2E4A2E' }}>
+            📄 Export PDF
+          </button>
+          <button onClick={handleExportCSV} className="btn-primary" style={{ padding: '0.35rem 1rem', fontSize: '0.85rem' }}>
+            📊 Export Excel
+          </button>
+        </div>
       </div>
 
       <div className="glass" style={{ padding: '1.5rem', overflowX: 'auto' }}>
@@ -182,7 +322,7 @@ export default function AdminSubscriptions() {
           <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '900px' }}>
             <thead>
               <tr style={{ borderBottom: '2px solid var(--color-accent)' }}>
-                {['ID', 'Customer', 'Product', 'Schedule', 'Timing', 'Status', 'Start Date', 'End Date', 'Next Delivery', 'Price/Day', 'Actions'].map(h => (
+                {['ID', 'Customer', 'Apartment', 'Product', 'Schedule', 'Timing', 'Status', 'Start Date', 'End Date', 'Next Delivery', 'Price/Day', 'Actions'].map(h => (
                   <th key={h} style={{ textAlign: 'left', padding: '0.75rem', fontFamily: 'var(--font-serif)', color: 'var(--color-primary)', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: 1 }}>{h}</th>
                 ))}
               </tr>
@@ -190,14 +330,21 @@ export default function AdminSubscriptions() {
             <tbody>
               {filteredSubs.map(s => {
                 const expired = isSubscriptionExpired(s.end_date, s.status);
+                const nextDay = s.next_delivery && s.next_delivery.split('T')[0];
+                const isToday = nextDay === todayStr && s.status === 'Active' && !expired;
+                const isTomorrow = nextDay === tomorrowStr && s.status === 'Active' && !expired;
                 return (
-                  <tr key={s.id} style={{ borderBottom: '1px solid rgba(201,168,106,0.2)' }}>
+                  <tr key={s.id} style={{ borderBottom: '1px solid rgba(201,168,106,0.2)', background: isToday ? 'rgba(46,74,46,0.06)' : isTomorrow ? 'rgba(201,168,106,0.08)' : 'transparent' }}>
                     <td style={{ padding: '0.75rem', fontFamily: 'var(--font-serif)', fontWeight: 600, color: 'var(--color-primary)', fontSize: '0.85rem' }}>
                       {s.id}
                     </td>
                     <td style={{ padding: '0.75rem' }}>
                       <p style={{ margin: 0, fontWeight: 600, color: 'var(--color-text)', fontSize: '0.9rem' }}>{s.customer_name}</p>
                       <p style={{ margin: '0.15rem 0 0', fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>{s.customer_email}</p>
+                      <p style={{ margin: '0.15rem 0 0', fontSize: '0.75rem', color: 'var(--color-primary)', fontWeight: 600 }}>{getMobile(s)}</p>
+                    </td>
+                    <td style={{ padding: '0.75rem', color: 'var(--color-text-muted)', fontSize: '0.8rem' }}>
+                      {extractApartment(s.customer_address || s.address)}
                     </td>
                     <td style={{ padding: '0.75rem', color: 'var(--color-text)', fontWeight: 500 }}>{s.product_name}</td>
                     <td style={{ padding: '0.75rem' }}>{getScheduleBadge(s.schedule)}</td>
@@ -233,6 +380,10 @@ export default function AdminSubscriptions() {
                         <span style={{ color: 'var(--color-accent)', fontWeight: 600 }}>Paused</span>
                       ) : expired ? (
                         <span style={{ color: '#dc2626', fontWeight: 600 }}>Expired</span>
+                      ) : isToday ? (
+                        <span style={{ color: '#16a34a', fontWeight: 700 }}>🚚 Today</span>
+                      ) : isTomorrow ? (
+                        <span style={{ color: '#b58b3c', fontWeight: 700 }}>📋 Tomorrow</span>
                       ) : (
                         formatDate(s.next_delivery)
                       )}
@@ -241,15 +392,25 @@ export default function AdminSubscriptions() {
                       {s.price_per_day ? `₹${s.price_per_day}` : '—'}
                     </td>
                     <td style={{ padding: '0.75rem' }}>
-                      <button onClick={() => handlePrintSubscription(s)} className="btn-outline" style={{ padding: '0.35rem 0.85rem', fontSize: '0.8rem' }}>
-                        Print
-                      </button>
+                      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                        {isToday && (
+                          <button
+                            onClick={() => handleMarkDelivered(s.id)}
+                            style={{ padding: '0.35rem 0.85rem', fontSize: '0.8rem', background: '#16a34a', color: '#fff', border: 'none', borderRadius: 'var(--radius-md)', cursor: 'pointer', fontWeight: 700, whiteSpace: 'nowrap' }}
+                          >
+                            ✓ Delivered
+                          </button>
+                        )}
+                        <button onClick={() => handlePrintSubscription(s)} className="btn-outline" style={{ padding: '0.35rem 0.85rem', fontSize: '0.8rem' }}>
+                          Print
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );
               })}
               {filteredSubs.length === 0 && (
-                <tr><td colSpan={11} style={{ padding: '3rem', textAlign: 'center', color: 'var(--color-text-muted)' }}>
+                <tr><td colSpan={12} style={{ padding: '3rem', textAlign: 'center', color: 'var(--color-text-muted)' }}>
                   No subscriptions match the selected filter.
                 </td></tr>
               )}
