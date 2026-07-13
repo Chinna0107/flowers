@@ -7,8 +7,12 @@ export default function AdminSubscriptions() {
   const { token } = useAuth();
   const [subs, setSubs] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState('All');
+  const [filter, setFilter] = useState([]);
   const [aptFilter, setAptFilter] = useState('All');
+
+  const toggleFilter = (f) => {
+    setFilter(prev => prev.includes(f) ? prev.filter(x => x !== f) : [...prev, f]);
+  };
 
   const extractApartment = (addrStr) => {
     if (!addrStr) return '—';
@@ -62,13 +66,19 @@ export default function AdminSubscriptions() {
 
   const filteredSubs = subs.filter(s => {
     if (aptFilter !== 'All' && extractApartment(s.customer_address || s.address) !== aptFilter) return false;
-    if (filter === 'All') return true;
+    if (filter.length === 0) return true;
     const expired = isSubscriptionExpired(s.end_date, s.status);
-    if (filter === 'Today') return s.status === 'Active' && !expired && s.next_delivery && s.next_delivery.split('T')[0] === todayStr;
-    if (filter === 'Tomorrow') return s.status === 'Active' && !expired && s.next_delivery && s.next_delivery.split('T')[0] === tomorrowStr;
-    if (filter === 'Expired') return expired && s.status !== 'Paused';
-    if (filter === 'Active') return s.status === 'Active' && !expired;
-    return s.status === filter;
+    const nextDay = s.next_delivery && s.next_delivery.split('T')[0];
+    const isToday = nextDay === todayStr && s.status === 'Active' && !expired;
+    const isTomorrow = nextDay === tomorrowStr && s.status === 'Active' && !expired;
+
+    return filter.every(f => {
+      if (f === 'Today') return isToday;
+      if (f === 'Tomorrow') return isTomorrow;
+      if (f === 'Expired') return expired && s.status !== 'Paused';
+      if (f === 'Active') return s.status === 'Active' && !expired;
+      return s.status === f;
+    });
   });
 
   useEffect(() => { load(); }, [token]);
@@ -248,7 +258,7 @@ export default function AdminSubscriptions() {
           <div class="no-print" style="margin-bottom: 20px;">
             <button onclick="window.print()" style="padding: 10px 20px; background: #2E4A2E; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">Print / Save as PDF</button>
           </div>
-          <h2>Subscriptions Report (Status: ${filter} | Apt: ${aptFilter})</h2>
+          <h2>Subscriptions Report (Status: ${filter.length ? filter.join(' + ') : 'All'} | Apt: ${aptFilter})</h2>
           <table>
             <thead>
               <tr>
@@ -292,12 +302,19 @@ export default function AdminSubscriptions() {
 
       <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
-          {['All', 'Active', 'Today', 'Tomorrow', 'Paused', 'Cancelled', 'Expired'].map(f => (
-            <button key={f} onClick={() => setFilter(f)} className={filter === f ? 'btn-primary' : 'btn-outline'}
-              style={{ padding: '0.35rem 1rem', fontSize: '0.85rem' }}>
+          {['Active', 'Today', 'Tomorrow', 'Paused', 'Cancelled', 'Expired'].map(f => (
+            <button key={f} onClick={() => toggleFilter(f)}
+              className={filter.includes(f) ? 'btn-primary' : 'btn-outline'}
+              style={{ padding: '0.35rem 1rem', fontSize: '0.85rem', position: 'relative' }}>
               {f === 'Today' ? '🚚 Today' : f === 'Tomorrow' ? '📋 Tomorrow' : f}
+              {filter.includes(f) && <span style={{ marginLeft: '0.4rem', fontSize: '0.75rem' }}>✕</span>}
             </button>
           ))}
+          {filter.length > 0 && (
+            <button onClick={() => setFilter([])} style={{ padding: '0.35rem 0.75rem', fontSize: '0.8rem', background: 'none', border: '1px solid #ccc', borderRadius: 'var(--radius-md)', cursor: 'pointer', color: 'var(--color-text-muted)' }}>
+              Clear
+            </button>
+          )}
           <div style={{ width: '1px', height: '24px', background: 'rgba(201,168,106,0.3)', margin: '0 0.5rem' }}></div>
           <select value={aptFilter} onChange={(e) => setAptFilter(e.target.value)} className="btn-outline" style={{ padding: '0.35rem 1rem', fontSize: '0.85rem', background: 'transparent', outline: 'none' }}>
             {uniqueApts.map(apt => (
