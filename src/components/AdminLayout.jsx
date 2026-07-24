@@ -9,6 +9,7 @@ const NAV = [
   { to: '/admin/subscriptions', label: 'Subscriptions', icon: '🔁' },
   { to: '/admin/reports', label: 'Reports', icon: '📊' },
   { to: '/admin/coupons', label: 'Coupons', icon: '🎟️' },
+  { to: '/admin/banner', label: 'Banner', icon: '🖼️' },
 ];
 
 const activeStyle = {

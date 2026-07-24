@@ -2,84 +2,111 @@ import { useState, useEffect } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useCart } from "../store/cartStore.jsx";
+import { useWishlist } from "../store/wishlistStore.jsx";
 import { useAuth } from "../store/authStore";
 import { CATEGORIES, getProductQuantity } from "../data/products.js";
 import { API } from "../config/api";
 import "./Products.css";
 
-function ProductCard({ p, onSubscribe }) {
+function ProductCard({ p }) {
   const [added, setAdded] = useState(false);
+  const [qty, setQty] = useState(1);
   const navigate = useNavigate();
   const { addToCart } = useCart();
+  const { isInWishlist, toggleWishlist } = useWishlist();
   const { user } = useAuth();
+  
+  const inWishlist = isInWishlist(p.id);
 
   const handleBuy = () => {
     if (!user) {
       navigate('/signin');
       return;
     }
-    addToCart({
-      id: p.id,
-      name: p.name,
-      price: p.our_price,
-      original: p.mrp || p.our_price,
-      img: p.img,
-      cat: p.category,
-      desc: p.description,
-      tag: p.tag,
-      unitQuantity: p.quantity || getProductQuantity(p)
-    });
+    // Add multiple quantities
+    for(let i=0; i<qty; i++) {
+      addToCart({
+        id: p.id,
+        name: p.name,
+        price: p.our_price,
+        original: p.mrp || p.our_price,
+        img: p.img,
+        cat: p.category,
+        desc: p.description,
+        tag: p.tag,
+        unitQuantity: p.quantity || getProductQuantity(p)
+      });
+    }
     setAdded(true);
     setTimeout(() => setAdded(false), 1600);
   };
 
-  const isPooja = p.category === 'pooja-basic' || p.category === 'pooja-premium';
-  const isFresh = p.category === 'fresh';
-  const isStringOnly = p.category === 'flower-strings';
-  const showBuyOnce = !isPooja;
-  const showSubscribe = (isPooja || isFresh) && !isStringOnly;
+  const increaseQty = () => setQty(q => q + 1);
+  const decreaseQty = () => setQty(q => q > 1 ? q - 1 : 1);
 
   return (
     <div className="pc-card">
-      <div className="pc-mobile-row">
-        <Link to={`/product/${p.id}`} className="pc-img-wrap" style={{ display: 'block', textDecoration: 'none', color: 'inherit' }}>
+      {/* ── LEFT: IMAGE AREA ── */}
+      <div className="pc-img-area">
+        <Link to={`/product/${p.id}`} className="pc-img-link">
           <img src={p.img} alt={p.name} className="pc-img" loading="lazy" />
-          <span className="pc-tag">{p.tag}</span>
-          {p.mrp && p.mrp > p.our_price && (
-            <span className="pc-discount">{Math.round((1 - p.our_price / p.mrp) * 100)}% off</span>
-          )}
         </Link>
-        <div className="pc-body">
-          <span className="pc-cat-label">{CATEGORIES.find(c => c.key === p.category)?.label || p.category}</span>
-          <Link to={`/product/${p.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-            <h3 className="pc-name">{p.name}</h3>
-          </Link>
-          <p className="pc-desc">{p.description}</p>
-          <div className="pc-price-row">
-            <span className="pc-price">
-              ₹{p.our_price}
-              <span style={{ fontSize: '0.82rem', color: 'var(--color-text-muted)', fontWeight: 'normal', marginLeft: '4px' }}>
-                / {p.quantity || getProductQuantity(p)}
-              </span>
-            </span>
-            {p.mrp && <span className="pc-original">₹{p.mrp}</span>}
-          </div>
-        </div>
+        {p.tag && <span className="pc-tag-overlay">{p.tag}</span>}
+        {p.mrp && p.mrp > p.our_price && (
+          <span className="pc-discount-overlay">{Math.round((1 - p.our_price / p.mrp) * 100)}% OFF</span>
+        )}
       </div>
-      <div className={`pc-actions ${(!showBuyOnce || !showSubscribe) ? 'single-action' : ''}`} style={(!showBuyOnce || !showSubscribe) ? { display: 'block' } : {}}>
-        {showBuyOnce && (
-          <button className={`pc-buy${added ? " pc-added" : ""}`} onClick={handleBuy} style={!showSubscribe ? { width: '100%' } : {}}>
-            {added ? "✓ Added to Cart" : "Add to Cart"}
+
+      {/* ── RIGHT: CONTENT AREA ── */}
+      <div className="pc-content-area">
+        {/* Wishlist Heart */}
+        <button 
+          className="pc-wishlist-btn" 
+          aria-label="Add to wishlist"
+          onClick={() => toggleWishlist(p)}
+          style={{ color: inWishlist ? 'var(--color-primary)' : 'inherit' }}
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill={inWishlist ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.5"><path d="M20.8 4.6a5.5 5.5 0 00-7.7 0l-1.1 1-1.1-1a5.5 5.5 0 00-7.8 7.8l1 1 7.9 7.9 7.9-7.9 1-1a5.5 5.5 0 000-7.8z"></path></svg>
+        </button>
+
+        <span className="pc-cat-label">{CATEGORIES.find(c => c.key === p.category)?.label || p.category}</span>
+        
+        <Link to={`/product/${p.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+          <h3 className="pc-name">{p.name}</h3>
+        </Link>
+
+        {/* Badges */}
+        <div className="pc-badges">
+          <span className="pc-badge"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg> Handpicked</span>
+          {(p.category === 'pooja-basic' || p.category === 'pooja-premium') ? (
+            <span className="pc-badge"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg> Temple Grade</span>
+          ) : (
+            <span className="pc-badge"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg> Fresh & Pure</span>
+          )}
+        </div>
+
+        {/* Price & Weight */}
+        <div className="pc-price-wrap">
+          <span className="pc-price">₹{Number(p.our_price).toFixed(2)}</span>
+          {p.mrp && <span className="pc-original">₹{Number(p.mrp).toFixed(2)}</span>}
+        </div>
+        <div className="pc-weight">{p.quantity || getProductQuantity(p)}</div>
+
+        {/* Actions Row */}
+        <div className="pc-actions-row">
+          <div className="pc-qty-selector">
+            <button onClick={decreaseQty}>−</button>
+            <span>{qty}</span>
+            <button onClick={increaseQty}>+</button>
+          </div>
+          <button className={`pc-add-cart-btn ${added ? 'added' : ''}`} onClick={handleBuy} title="Add to Cart">
+            {!added ? (
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14"></path></svg>
+            ) : (
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            )}
           </button>
-        )}
-        {showSubscribe && (
-          <button className="pc-sub" onClick={() => navigate("/subscriptions", { state: { preSelectedProduct: p } })} style={{
-            width: !showBuyOnce ? '100%' : 'auto',
-            ...(!showBuyOnce ? { background: 'var(--color-primary)', color: '#FAF7F2', borderColor: 'var(--color-primary)' } : {})
-          }}>
-            🔁 Subscribe
-          </button>
-        )}
+        </div>
       </div>
     </div>
   );
@@ -122,12 +149,31 @@ export default function Products() {
         <link rel="canonical" href="https://sowgandhikafreshflowers.com/products" />
       </Helmet>
 
-      {/* ── PAGE HERO ── */}
-      <div className="products-hero">
-        <div className="products-hero-overlay" />
-        <div className="products-hero-content">
-          <h1 style={{ lineHeight: '1.2' }}>Our Collection</h1>
-          <p>Farm-fresh blooms for every tradition, occasion &amp; doorstep</p>
+      {/* ── TOP HEADER SECTION ── */}
+      <div className="prod-top-header">
+        <h1 className="prod-top-title">Sowgandhika Fresh Flowers</h1>
+        <div className="prod-top-subtitle-wrap">
+          <span className="prod-top-line"></span>
+          <p className="prod-top-subtitle">Freshness You Can Feel, Purity You Can Trust</p>
+          <span className="prod-top-line"></span>
+        </div>
+      </div>
+
+      {/* ── TOP HORIZONTAL CATEGORIES (CIRCLES) ── */}
+      <div className="prod-top-cats-wrapper">
+        <div className="prod-top-cats">
+          {CATEGORIES.map(cat => (
+            <button
+              key={cat.key}
+              onClick={() => setActive(cat.key)}
+              className={`prod-top-cat-item ${active === cat.key ? "active" : ""}`}
+            >
+              <div className="prod-top-cat-circle">
+                <img src={cat.img} alt={cat.label} loading="lazy" />
+              </div>
+              <span className="prod-top-cat-label">{cat.label}</span>
+            </button>
+          ))}
         </div>
       </div>
 
@@ -224,6 +270,24 @@ export default function Products() {
 
         </div>
       </div>
+
+      {/* ── BOTTOM SUBSCRIBE BANNER ── */}
+      <div className="prod-subscribe-banner">
+        <div className="prod-sub-banner-content">
+          <div className="prod-sub-banner-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
+          </div>
+          <div className="prod-sub-banner-text">
+            <h4>Subscribe & Save More!</h4>
+            <p>Get exclusive discounts & regular updates</p>
+          </div>
+        </div>
+        <button className="prod-sub-banner-btn" onClick={() => navigate("/subscriptions")}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+          SUBSCRIBE NOW
+        </button>
+      </div>
+
     </div>
   );
 }

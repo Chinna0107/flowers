@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../store/authStore";
+import { GoogleLogin } from '@react-oauth/google';
 import FadeIn from "../components/FadeIn";
 
 export default function Signin() {
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
 
   const set = (k) => (e) => setForm((p) => ({ ...p, [k]: e.target.value }));
@@ -23,6 +24,15 @@ export default function Signin() {
       setError(result.error);
     }
     setLoading(false);
+  };
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    const res = await loginWithGoogle(credentialResponse.credential);
+    if (res.success) {
+      navigate(res.isAdmin ? '/admin/dashboard' : '/', { replace: true });
+    } else {
+      setError(res.error || 'Google login failed');
+    }
   };
 
   const inp = {
@@ -54,6 +64,24 @@ export default function Signin() {
               {loading ? "Please wait..." : "Sign In"}
             </button>
           </form>
+
+          <div style={{ display: 'flex', alignItems: 'center', margin: '1.5rem 0' }}>
+            <div style={{ flex: 1, height: '1px', backgroundColor: 'rgba(201,168,106,0.3)' }} />
+            <span style={{ padding: '0 1rem', fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>OR</span>
+            <div style={{ flex: 1, height: '1px', backgroundColor: 'rgba(201,168,106,0.3)' }} />
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.5rem' }}>
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={() => {
+                setError('Google Login Failed');
+              }}
+              theme="filled_black"
+              shape="circle"
+              text="signin_with"
+            />
+          </div>
 
           <div style={{ textAlign: "center", marginTop: "1rem" }}>
             <Link to="/forgot-password" style={{ background: "none", border: "none", color: "var(--color-accent)", fontSize: "0.85rem", textDecoration: "underline", fontFamily: "var(--font-primary)" }}>

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../store/authStore";
+import { GoogleLogin } from '@react-oauth/google';
 import FadeIn from "../components/FadeIn";
 import { BUILDINGS, PINCODES } from "../data/addressOptions.js";
 
@@ -12,7 +13,7 @@ export default function Signup() {
   const [error, setError] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
   const [loading, setLoading] = useState(false);
-  const { signup, verifyOtp, completeProfile } = useAuth();
+  const { signup, verifyOtp, completeProfile, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
 
   const set = (k) => (e) => setForm((p) => ({ ...p, [k]: e.target.value }));
@@ -61,6 +62,15 @@ export default function Signup() {
       }
     }
     setLoading(false);
+  };
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    const res = await loginWithGoogle(credentialResponse.credential);
+    if (res.success) {
+      navigate(res.isAdmin ? '/admin/dashboard' : '/');
+    } else {
+      setError(res.error || 'Google login failed');
+    }
   };
 
   const inp = {
@@ -131,6 +141,28 @@ export default function Signup() {
               {loading ? "Please wait..." : step === 1 ? "Send OTP" : step === 2 ? "Verify Code" : "Create Account"}
             </button>
           </form>
+
+          {step === 1 && (
+            <>
+              <div style={{ display: 'flex', alignItems: 'center', margin: '1.5rem 0' }}>
+                <div style={{ flex: 1, height: '1px', backgroundColor: 'rgba(201,168,106,0.3)' }} />
+                <span style={{ padding: '0 1rem', fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>OR</span>
+                <div style={{ flex: 1, height: '1px', backgroundColor: 'rgba(201,168,106,0.3)' }} />
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'center' }}>
+                <GoogleLogin
+                  onSuccess={handleGoogleSuccess}
+                  onError={() => {
+                    setError('Google Signup Failed');
+                  }}
+                  theme="filled_black"
+                  shape="circle"
+                  text="signup_with"
+                />
+              </div>
+            </>
+          )}
 
           <p style={{ textAlign: "center", marginTop: "1.25rem", fontSize: "0.85rem", color: "var(--color-text-muted)" }}>
             Already have an account?{" "}

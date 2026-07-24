@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../store/authStore";
+import { GoogleLogin } from '@react-oauth/google';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [isAdmin, setIsAdmin] = useState(false);
-  const { login } = useAuth();
+  const { login, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = (e) => {
@@ -13,6 +14,15 @@ export default function Login() {
     if (!email) return;
     login(email, isAdmin);
     navigate(isAdmin ? '/admin/dashboard' : '/');
+  };
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    const res = await loginWithGoogle(credentialResponse.credential);
+    if (res.success) {
+      navigate(res.isAdmin ? '/admin/dashboard' : '/');
+    } else {
+      alert(res.error || 'Google login failed');
+    }
   };
 
   return (
@@ -56,7 +66,30 @@ export default function Login() {
           </button>
         </form>
 
+        <div style={{ display: 'flex', alignItems: 'center', margin: '1.5rem 0' }}>
+          <div style={{ flex: 1, height: '1px', backgroundColor: 'rgba(201,168,106,0.3)' }} />
+          <span style={{ padding: '0 1rem', fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>OR</span>
+          <div style={{ flex: 1, height: '1px', backgroundColor: 'rgba(201,168,106,0.3)' }} />
+        </div>
+
+        <div style={{ display: 'flex', justifyContent: 'center' }}>
+          <GoogleLogin
+            onSuccess={handleGoogleSuccess}
+            onError={() => {
+              console.log('Login Failed');
+              alert('Google Login Failed');
+            }}
+            theme="filled_black"
+            shape="circle"
+            text="signin_with"
+          />
+        </div>
+
         <p style={{ marginTop: '1.5rem', fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>
+          Don't have an account?{' '}
+          <Link to="/signup" style={{ color: 'var(--color-accent)' }}>Sign Up</Link>
+        </p>
+        <p style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>
           By signing in you agree to our{' '}
           <Link to="/privacy" style={{ color: 'var(--color-accent)' }}>Privacy Policy</Link>
         </p>

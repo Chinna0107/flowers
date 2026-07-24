@@ -50,6 +50,25 @@ export function AuthProvider({ children }) {
     }
   };
 
+  const loginWithGoogle = async (credential) => {
+    try {
+      const res = await fetch(`${API}/auth/google`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ credential }),
+      });
+      const data = await res.json();
+      if (!res.ok) return { success: false, error: data.error || 'Google Authentication Failed' };
+      setUser(data.user);
+      setIsAdmin(data.isAdmin);
+      setToken(data.token);
+      localStorage.setItem('auth', JSON.stringify({ user: data.user, isAdmin: data.isAdmin, token: data.token }));
+      return { success: true, isAdmin: data.isAdmin };
+    } catch {
+      return { success: false, error: 'Server error during Google Auth. Please try again.' };
+    }
+  };
+
   const signup = async (email) => {
     try {
       const res = await fetch(`${API}/auth/signup`, {
@@ -122,7 +141,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, isAdmin, token, login, signup, logout, forgotPassword, verifyOtp, completeProfile }}>
+    <AuthContext.Provider value={{ user, isAdmin, token, login, loginWithGoogle, signup, forgotPassword, verifyOtp, completeProfile, logout }}>
       {children}
     </AuthContext.Provider>
   );

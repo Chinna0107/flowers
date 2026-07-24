@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Flower2, ShoppingBag, RefreshCcw, CircleUserRound, LayoutGrid, Info, Phone, LogIn, Package, Repeat, LifeBuoy, LogOut } from 'lucide-react';
+import { Flower2, ShoppingBag, RefreshCcw, CircleUserRound, LayoutGrid, Info, Phone, LogIn, Package, Repeat, LifeBuoy, LogOut, Heart } from 'lucide-react';
 import { useAuth } from '../store/authStore';
 import { useCart } from '../store/cartStore.jsx';
+import { useWishlist } from '../store/wishlistStore.jsx';
 
 export default function MobileNav(){
   const { pathname } = useLocation();
@@ -10,7 +11,9 @@ export default function MobileNav(){
   const [menuOpen, setMenuOpen] = useState(false);
   const { user, logout } = useAuth();
   const { cart } = useCart();
+  const { wishlist } = useWishlist();
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+  const wishlistCount = wishlist.length;
   const navigate = useNavigate();
   const menuRef = useRef(null);
 
@@ -86,9 +89,14 @@ export default function MobileNav(){
           )}
           <span>Cart</span>
         </Link>
-        <Link to="/subscriptions" className={isActive('/subscriptions') ? 'active' : ''}>
-          <RefreshCcw />
-          <span>Subs</span>
+        <Link to="/wishlist" className={isActive('/wishlist') ? 'active' : ''} style={{ position: 'relative' }}>
+          <Heart />
+          {wishlistCount > 0 && (
+            <span style={{ position: 'absolute', top: '0', right: '15px', background: '#c0392b', color: '#fff', fontSize: '0.6rem', padding: '0.1rem 0.3rem', borderRadius: '10px', lineHeight: 1 }}>
+              {wishlistCount}
+            </span>
+          )}
+          <span>Wishlist</span>
         </Link>
         <button 
           onClick={() => setMenuOpen(!menuOpen)} 

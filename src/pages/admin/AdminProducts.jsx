@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "../../store/authStore";
 import { API } from "../../config/api";
 
-const BLANK = { name: '', category: 'fresh', price_per_unit: '', our_price: '', mrp: '', tag: '', img: '', description: '', quantity: '', price_variants: [] };
+const BLANK = { name: '', category: 'fresh', price_per_unit: '', our_price: '', mrp: '', tag: '', img: '', description: '', quantity: '', price_variants: [], is_fresh_daily: false, is_best_seller: false, is_festive_collection: false, is_trending: false };
 
 export default function AdminProducts() {
   const { token } = useAuth();
@@ -60,7 +60,11 @@ export default function AdminProducts() {
         our_price: +form.our_price,
         mrp: form.mrp ? +form.mrp : null,
         quantity: form.quantity || null,
-        price_variants: JSON.stringify(form.price_variants || [])
+        price_variants: JSON.stringify(form.price_variants || []),
+        is_fresh_daily: form.is_fresh_daily || false,
+        is_best_seller: form.is_best_seller || false,
+        is_festive_collection: form.is_festive_collection || false,
+        is_trending: form.is_trending || false
       }),
     });
     setForm(BLANK); setEditing(null); setShowForm(false); setImageFile(null); load();
@@ -78,6 +82,10 @@ export default function AdminProducts() {
       description: p.description || '',
       quantity: p.quantity || '',
       price_variants: p.price_variants || [],
+      is_fresh_daily: p.is_fresh_daily || false,
+      is_best_seller: p.is_best_seller || false,
+      is_festive_collection: p.is_festive_collection || false,
+      is_trending: p.is_trending || false,
     });
     setEditing(p.id);
     setShowForm(true);
@@ -201,6 +209,29 @@ export default function AdminProducts() {
             <div style={{ marginBottom: '1.5rem' }}>
               <label style={{ display: 'block', marginBottom: '0.4rem', fontWeight: 600, color: 'var(--color-primary)', fontSize: '0.85rem' }}>Description</label>
               <textarea style={{ ...inp, minHeight: '100px', resize: 'vertical' }} placeholder="Describe the product..." value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} />
+            </div>
+
+            {/* Display Flags */}
+            <div style={{ marginBottom: '1.5rem', padding: '1.25rem', background: 'rgba(201,168,106,0.1)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(201,168,106,0.3)' }}>
+              <label style={{ display: 'block', marginBottom: '0.75rem', fontWeight: 600, color: 'var(--color-primary)', fontSize: '0.95rem' }}>Home Page Display Sections</label>
+              <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.85rem', color: 'var(--color-text)' }}>
+                  <input type="checkbox" checked={form.is_fresh_daily} onChange={e => setForm({...form, is_fresh_daily: e.target.checked})} />
+                  Fresh Daily
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.85rem', color: 'var(--color-text)' }}>
+                  <input type="checkbox" checked={form.is_best_seller} onChange={e => setForm({...form, is_best_seller: e.target.checked})} />
+                  Best Seller
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.85rem', color: 'var(--color-text)' }}>
+                  <input type="checkbox" checked={form.is_festive_collection} onChange={e => setForm({...form, is_festive_collection: e.target.checked})} />
+                  Festive Collection
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.85rem', color: 'var(--color-text)' }}>
+                  <input type="checkbox" checked={form.is_trending} onChange={e => setForm({...form, is_trending: e.target.checked})} />
+                  Trending / Popular
+                </label>
+              </div>
             </div>
 
             {/* Price Variants for Fresh Flowers */}

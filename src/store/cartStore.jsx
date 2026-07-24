@@ -4,6 +4,8 @@ const CartContext = createContext();
 
 export function CartProvider({ children }) {
   const [cart, setCart] = useState([]);
+  const [discount, setDiscount] = useState(0);
+  const [coupon, setCoupon] = useState("");
 
   useEffect(() => {
     const saved = JSON.parse(localStorage.getItem('cart') || '[]');
@@ -42,10 +44,17 @@ export function CartProvider({ children }) {
 
   const clearCart = () => {
     setCart([]);
+    setDiscount(0);
+    setCoupon("");
+  };
+
+  const applyCoupon = (code, amount) => {
+    setCoupon(code);
+    setDiscount(amount);
   };
 
   return (
-    <CartContext.Provider value={{ cart, addToCart, removeFromCart, updateQuantity, clearCart }}>
+    <CartContext.Provider value={{ cart, addToCart, removeFromCart, updateQuantity, clearCart, discount, coupon, applyCoupon }}>
       {children}
     </CartContext.Provider>
   );

@@ -32,7 +32,7 @@ const displayAddress = (addrStr) => {
 };
 
 export default function Checkout() {
-  const { cart, clearCart } = useCart();
+  const { cart, clearCart, discount, coupon, applyCoupon } = useCart();
   const { token, user } = useAuth();
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
@@ -45,10 +45,9 @@ export default function Checkout() {
   const [customTiming, setCustomTiming] = useState("");
   const set = (k) => (e) => setAddress(p => ({ ...p, [k]: e.target.value }));
 
-  const [couponCode, setCouponCode] = useState("");
-  const [discount, setDiscount] = useState(0);
-  const [couponApplied, setCouponApplied] = useState(false);
+  const [couponCode, setCouponCode] = useState(coupon || "");
   const [couponError, setCouponError] = useState("");
+  const couponApplied = discount > 0;
 
   const subtotal = useMemo(() => cart.reduce((sum, item) => sum + item.price * item.quantity, 0), [cart]);
   const tax = useMemo(() => Math.round(subtotal * 0.05), [subtotal]);
@@ -102,8 +101,6 @@ export default function Checkout() {
       const data = await res.json();
       if (!res.ok) {
         setCouponError(data.error || 'Failed to apply coupon');
-        setDiscount(0);
-        setCouponApplied(false);
         Swal.fire({
           icon: 'error',
           title: 'Coupon Error',
@@ -111,8 +108,7 @@ export default function Checkout() {
           confirmButtonColor: '#2E4A2E'
         });
       } else {
-        setDiscount(parseFloat(data.discount));
-        setCouponApplied(true);
+        applyCoupon(couponCode, data.discount);
         setCouponError("");
         Swal.fire({
           icon: 'success',
@@ -217,6 +213,12 @@ export default function Checkout() {
       });
       setLoading(false);
     }
+  };
+
+  const handleRemoveCoupon = () => {
+    applyCoupon("", 0);
+    setCouponCode("");
+    setCouponError("");
   };
 
   const handleNextStep = () => {

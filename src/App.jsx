@@ -3,6 +3,7 @@ import { HelmetProvider } from "react-helmet-async";
 import './index.css';
 import './styles/theme.css';
 import { AuthProvider } from './store/authStore';
+import { WishlistProvider } from './store/wishlistStore';
 
 import Layout from "./components/Layout.jsx";
 import AdminLayout from "./components/AdminLayout.jsx";
@@ -25,6 +26,7 @@ import MySubscriptions from "./pages/MySubscriptions.jsx";
 import Support from "./pages/Support.jsx";
 import OrderConfirmation from "./pages/OrderConfirmation.jsx";
 import ProductDetails from "./pages/ProductDetails.jsx";
+import Wishlist from "./pages/Wishlist.jsx";
 
 // Admin Pages
 import AdminDashboard from "./pages/admin/AdminDashboard.jsx";
@@ -33,13 +35,15 @@ import AdminProducts from "./pages/admin/AdminProducts.jsx";
 import AdminSubscriptions from "./pages/admin/AdminSubscriptions.jsx";
 import AdminReports from "./pages/admin/AdminReports.jsx";
 import AdminCoupons from "./pages/admin/AdminCoupons.jsx";
+import AdminBanner from "./pages/admin/AdminBanner.jsx";
 
 function App() {
   return (
     <HelmetProvider>
       <AuthProvider>
-        <CartProvider>
-          <Router>
+        <WishlistProvider>
+          <CartProvider>
+            <Router>
             <Routes>
             {/* Customer Routes */}
             <Route element={<Layout />}>
@@ -49,6 +53,7 @@ function App() {
               <Route path="/products" element={<ProductList />} />
               <Route path="/product/:id" element={<ProductDetails />} />
               <Route path="/subscriptions" element={<Subscriptions />} />
+              <Route path="/wishlist" element={<Wishlist />} />
               <Route path="/cart" element={<Cart />} />
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/confirmation" element={<OrderConfirmation />} />
@@ -76,14 +81,16 @@ function App() {
               <Route path="subscriptions" element={<AdminSubscriptions />} />
               <Route path="reports" element={<AdminReports />} />
               <Route path="coupons" element={<AdminCoupons />} />
+              <Route path="banner" element={<AdminBanner />} />
             </Route>
 
             {/* Fallback */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
-        </Router>
-      </CartProvider>
-    </AuthProvider>
+          </Router>
+          </CartProvider>
+        </WishlistProvider>
+      </AuthProvider>
     </HelmetProvider>
   );
 }
