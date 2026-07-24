@@ -76,14 +76,14 @@ function ProductCard({ p }) {
         </Link>
 
         {/* Badges */}
-        <div className="pc-badges">
+        {/* <div className="pc-badges">
           <span className="pc-badge"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg> Handpicked</span>
           {(p.category === 'pooja-basic' || p.category === 'pooja-premium') ? (
             <span className="pc-badge"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg> Temple Grade</span>
           ) : (
             <span className="pc-badge"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg> Fresh & Pure</span>
           )}
-        </div>
+        </div> */}
 
         {/* Price & Weight */}
         <div className="pc-price-wrap">
