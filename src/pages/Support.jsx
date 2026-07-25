@@ -12,7 +12,7 @@ const SUBJECTS = [
 ];
 
 const FAQS = [
-  { q: "How fresh are the flowers?",             a: "All flowers are sourced daily from local growers and delivered the same day — never stored overnight." },
+  { q: "How fresh are the flowers?",             a: "All flowers are sourced daily from local growers and delivered the same day according to the category — never stored overnight." },
   { q: "Can I change my subscription schedule?", a: "Yes! Pause, resume or reschedule anytime from My Subscriptions — no calls needed." },
   { q: "What if my order is late or wrong?",     a: "Message us on WhatsApp immediately. We resolve delivery issues within 2 hours." },
   { q: "How do I cancel an order?",              a: "Orders can be cancelled within 2 hours of placement. Use the form below or WhatsApp us directly." },

@@ -176,7 +176,7 @@ export default function Home() {
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#c9a86a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
               </span>
               <div className="feature-text">
-                <span className="ft-title">Same Day Delivery</span>
+                {/* <span className="ft-title">Same Day Delivery</span> */}
                 <span className="ft-sub">Freshness Guaranteed</span>
               </div>
             </div>
@@ -210,7 +210,7 @@ export default function Home() {
             <span className="ff-icon">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
             </span>
-            <span className="ff-title">Same Day<br/>Delivery</span>
+            <span className="ff-title">Daily <br/>Delivery</span>
             <span className="ff-sub">Fast & Reliable</span>
           </div>
           <div className="ff-divider"></div>
@@ -218,7 +218,7 @@ export default function Home() {
             <span className="ff-icon">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M2 22v-2h20v2H2zm2-2v-4h2v4H4zm4 0v-4h2v4H8zm4 0v-4h2v4h-2zm4 0v-4h2v4h-2zM4 14l8-8 8 8H4zm8-10.5L3 13h18L12 3.5z"/></svg>
             </span>
-            <span className="ff-title">Temple Grade<br/>Quality</span>
+            <span className="ff-title">Freshly Graded<br/>Quality</span>
             <span className="ff-sub">Pure & Sacred</span>
           </div>
           <div className="ff-divider"></div>
@@ -226,7 +226,7 @@ export default function Home() {
             <span className="ff-icon">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
             </span>
-            <span className="ff-title">1000+ Happy<br/>Customers</span>
+            <span className="ff-title">500+ Happy<br/>Customers</span>
             <span className="ff-sub">Trusted by many</span>
           </div>
         </div>
